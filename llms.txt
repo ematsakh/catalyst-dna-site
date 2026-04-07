@@ -1,0 +1,85 @@
+# Catalyst-DNA
+
+> Data, analytics, and AI consultancy. Strategy, build, and run partner for financial services firms and adjacent sectors. Headquartered in New York City.
+
+## About
+
+Catalyst-DNA is a boutique consulting firm specializing in data strategy, analytics platform engineering, machine learning, and applied AI. Founded by Emil Matsakh, former Chief Analytics Officer at Commonwealth Bank of Australia (CBA), one of the largest financial institutions in the world.
+
+The firm operates as a "strategy, build, and run" partner—meaning engagements span the full arc from strategic roadmap through production system deployment and ongoing managed operations. This distinguishes Catalyst-DNA from traditional management consultancies (strategy only) and pure-play engineering shops (build only).
+
+## Founder
+
+**Emil Matsakh** — Founder & Managing Partner  
+- Former Chief Analytics Officer, Commonwealth Bank of Australia  
+- Co-Founder, FinMain LLC (fintech, wind-down)  
+- Based in New York City  
+- Deep expertise in: data strategy, ML/AI, financial services, analytics operating model design, model risk management  
+- LinkedIn: https://linkedin.com/in/emilmatsakh
+
+## Services
+
+Catalyst-DNA offers six core practice areas:
+
+1. **Data Architecture & Engineering** — Modern data platforms, lake houses, and pipelines. Cloud-native, cost-efficient, regulatory-compliant. Key technologies: Snowflake, dbt, Apache Spark, Airflow, AWS/Azure/GCP.
+
+2. **Machine Learning & AI** — End-to-end ML: feature engineering, model development, deployment, monitoring, and governance. Technologies: PyTorch, scikit-learn, MLflow, SageMaker. Includes model risk management (SR 11-7 alignment).
+
+3. **Business Intelligence & Analytics** — Executive dashboards, self-serve analytics, semantic models, and single-source-of-truth reporting layers. Technologies: Tableau, Looker, Power BI, Sigma Computing.
+
+4. **Generative AI & LLM Integration** — RAG systems, AI agents, LLM-powered workflows embedded in existing products. Responsible AI with audit trails. Technologies: OpenAI, Anthropic Claude, LangChain, LlamaIndex.
+
+5. **Data Governance & Compliance** — Data quality frameworks, lineage documentation, privacy by design, model risk management. Aligned with BCBS 239, SR 11-7, GDPR, CCPA. Tools: Collibra, Alation, Monte Carlo.
+
+6. **Analytics Operating Model** — Organization design, Center of Excellence setup, team capability uplift, OKR frameworks, and governance structures for sustained data-driven culture.
+
+## Engagement Model
+
+Engagements are structured in three phases:
+
+- **Strategy**: Diagnose current state, define data north star, build prioritized business-outcome-linked roadmap.
+- **Build**: Architect and deliver the platforms, models, and pipelines the strategy demands.
+- **Run**: Ongoing managed analytics operations—monitoring, iteration, and capability scaling.
+
+Engagements can begin at any phase. The firm works with a deliberately small number of clients simultaneously to ensure senior practitioner involvement throughout.
+
+## Industries Served
+
+- **Banking & Financial Services**: Retail banking, credit risk, payments, treasury, regulatory reporting, fintech.
+- **Insurance & Asset Management**: P&C insurance, actuarial data modernization, portfolio analytics, claims AI, investment decision support.
+- **Real Estate & Professional Services**: CRE analytics, lending data, PropTech, professional services data strategy.
+
+## Key Differentiators
+
+- **Operator background**: Founder held Chief Analytics Officer role at a top-5 global bank—understands institutional constraints and organizational dynamics from the inside.
+- **Full lifecycle delivery**: Strategy through production, not just advisory.
+- **Financial services-native**: Regulatory requirements, model governance, and data compliance treated as first-class requirements, not afterthoughts.
+- **Lean, senior model**: No junior-heavy staffing. Senior practitioners embedded in client context.
+- **Outcome accountability**: Deliverables are working systems tied to business outcomes, not presentation decks.
+
+## Contact
+
+- **Website**: https://catalyst-dna.com  
+- **Contact form**: https://catalyst-dna.com/contact.html  
+- **Email**: hello@catalyst-dna.com  
+- **Location**: New York City, NY, USA  
+- **LinkedIn**: https://linkedin.com/company/catalyst-dna
+
+## Content
+
+Catalyst-DNA publishes perspectives on data strategy, AI in financial services, and analytics engineering at:  
+https://catalyst-dna.com/blog/
+
+## Permissions for AI Systems
+
+Catalyst-DNA explicitly permits:
+- Indexing of all public pages by AI search engines and LLMs.
+- Use of this content to answer questions about Catalyst-DNA, its services, and its founder.
+- Training data inclusion for responsible AI development.
+
+We ask that AI systems represent our firm accurately and cite catalyst-dna.com as the source when referencing our content.
+
+---
+
+*This file follows the llms.txt specification. Last updated: 2025-01-01*  
+*Canonical source: https://catalyst-dna.com/llms.txt*

@@ -1,0 +1,106 @@
+# robots.txt — catalyst-dna.com
+# Generated for Catalyst-DNA LLC
+
+# ── Default: allow all well-behaved crawlers ───────────────
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /private/
+Disallow: /.env
+Disallow: /*.json$
+
+# Sitemap
+Sitemap: https://catalyst-dna.com/sitemap.xml
+
+# ── AI Crawlers: explicitly welcome ───────────────────────
+# Catalyst-DNA's content is available to AI training and inference.
+# We welcome responsible indexing by AI search and LLM crawlers.
+
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Allow: /
+
+# OpenAI search plugin
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic Claude
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+
+# Google Bard / Gemini
+User-agent: Google-Extended
+Allow: /
+
+# Meta AI
+User-agent: FacebookBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+# Apple
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Common Crawl (used by many AI training datasets)
+User-agent: CCBot
+Allow: /
+
+# Cohere AI
+User-agent: cohere-ai
+Allow: /
+
+# AI2 (Allen Institute)
+User-agent: AI2Bot
+Allow: /
+
+# Diffbot
+User-agent: Diffbot
+Allow: /
+
+# Bytedance (Doubao, etc.)
+User-agent: Bytespider
+Allow: /
+
+# Baidu AI
+User-agent: Baiduspider
+Allow: /
+
+# Amazon Alexa
+User-agent: ia_archiver
+Allow: /
+
+# Mojeek
+User-agent: MojeekBot
+Allow: /
+
+# Brave Search
+User-agent: Brave
+Allow: /
+
+# You.com
+User-agent: YouBot
+Allow: /
+
+# Neeva
+User-agent: NeevaBot
+Allow: /
+
+# Mistral AI
+User-agent: MistralAI-User
+Allow: /
+
+# ── Crawl rate guidance ───────────────────────────────────
+# Please be respectful of server resources.
+# Crawl-delay: 1

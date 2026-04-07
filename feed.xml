@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:media="http://search.yahoo.com/mrss/"
+>
+  <channel>
+
+    <!-- Channel metadata -->
+    <title>Catalyst-DNA Insights</title>
+    <link>https://catalyst-dna.com/blog/</link>
+    <description>
+      Perspectives on data strategy, AI in financial services, and building
+      analytics capabilities that create durable business advantage.
+      From the team at Catalyst-DNA.
+    </description>
+    <language>en-US</language>
+    <copyright>Copyright 2025 Catalyst-DNA LLC. All rights reserved.</copyright>
+    <managingEditor>hello@catalyst-dna.com (Emil Matsakh)</managingEditor>
+    <webMaster>hello@catalyst-dna.com (Catalyst-DNA)</webMaster>
+    <pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate>
+    <lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <category>Data Strategy</category>
+    <category>Artificial Intelligence</category>
+    <category>Analytics</category>
+    <category>Financial Services</category>
+    <ttl>1440</ttl>
+
+    <!-- Atom self link (required for valid Atom-compatible RSS) -->
+    <atom:link
+      href="https://catalyst-dna.com/feed.xml"
+      rel="self"
+      type="application/rss+xml"
+    />
+
+    <!-- Channel image -->
+    <image>
+      <url>https://catalyst-dna.com/images/logo.png</url>
+      <title>Catalyst-DNA Insights</title>
+      <link>https://catalyst-dna.com/blog/</link>
+      <width>144</width>
+      <height>144</height>
+    </image>
+
+    <!--
+    ═══════════════════════════════════════════════════════════
+    BLOG POST ITEMS — Add new posts here, most recent first.
+
+    Item template:
+
+    <item>
+      <title>Your Post Title Here</title>
+      <link>https://catalyst-dna.com/blog/your-post-slug/</link>
+      <guid isPermaLink="true">https://catalyst-dna.com/blog/your-post-slug/</guid>
+      <pubDate>Mon, 01 Jan 2025 09:00:00 +0000</pubDate>
+      <author>hello@catalyst-dna.com (Emil Matsakh)</author>
+      <dc:creator>Emil Matsakh</dc:creator>
+      <category>Data Strategy</category>
+      <description><![CDATA[
+        Short excerpt (150-160 chars) for feed readers. Plain text.
+      ]]></description>
+      <content:encoded><![CDATA[
+        <p>Full HTML content of the post goes here.</p>
+        <p>Use proper HTML. Images, headings, links all supported.</p>
+      ]]></content:encoded>
+      <media:content
+        url="https://catalyst-dna.com/images/blog/your-post-image.png"
+        medium="image"
+        type="image/png"
+        width="1200"
+        height="630"
+      />
+    </item>
+
+    ═══════════════════════════════════════════════════════════
+    -->
+
+    <!-- No posts yet — feed is ready and will auto-populate as posts are added above -->
+
+  </channel>
+</rss>
