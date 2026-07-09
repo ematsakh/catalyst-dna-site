@@ -1,0 +1,358 @@
+/* ============================================================
+   CATALYST-DNA TRUST LAYER  ·  v1.0  ·  Phase A  ·  July 2026
+   Extension of catalyst-dna-tokens.css — load AFTER the tokens.
+   Six components, one law: every surface varies in structure,
+   never in palette, type, or motion. All values here derive
+   from token vars; no raw hex except the two status hues
+   introduced as tokens below (§0).
+
+   Components:
+     §1  .tl-cite      citation chip
+     §2  .tl-conf      confidence tag
+     §3  .tl-asof      as-of / freshness stamp
+     §4  .tl-exc       exception row
+     §5  .tl-engage    "requires bank data — engagement mode" marker
+     §6  .tl-gate      human-approval gate
+
+   Markup contracts are documented above each block. JS behavior
+   (expand/collapse, gate state) is Phase B; everything renders
+   correctly with CSS alone in its default state.
+
+   COMPLIANCE NOTE · BOSS: boss_demo.jsx currently carries a local
+   light palette (#F8FAFC ground, #3B82F6 accent — the Tailwind hex
+   the token system deliberately moved off). BOSS therefore
+   violates the palette law by inheritance, not intent. Phase B
+   chunk that touches the CEO surface must remap BOSS onto these
+   tokens before the BOSS surface absorbs the ceobrief route.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   §0 · TOKEN EXTENSIONS
+   The trust layer needs two status hues the base tokens lack.
+   Introduced AS TOKENS so no component hard-codes color.
+   --warn already exists (#E0A43C, demos hub). --ok is new and
+   deliberately desaturated — this is an evidence system, not
+   a scoreboard; green never celebrates, it only confirms.
+   ------------------------------------------------------------ */
+:root {
+  --ok:            #4C9E7E;               /* verified / passed */
+  --ok-dim:        rgba(76, 158, 126, .14);
+  --warn-dim:      rgba(224, 164, 60, .14);
+  --alert:         #C4574E;               /* blocking / failed  */
+  --alert-dim:     rgba(196, 87, 78, .14);
+  --accent-dim:    rgba(46, 113, 229, .14);
+
+  /* trust-layer structural constants */
+  --tl-chip-h:     1.375rem;              /* 22px chip height  */
+  --tl-inset:      .875rem;               /* row padding       */
+  --tl-hairline:   1px solid var(--border);
+}
+
+/* ------------------------------------------------------------
+   §1 · CITATION CHIP  ·  .tl-cite
+   Inline provenance for a single figure or claim. The chip is
+   the *whole* affordance: click/tap expands the source detail
+   (Phase B); default state must already communicate "this
+   number has a receipt."
+
+   Markup:
+     <button class="tl-cite" aria-expanded="false">
+       <span class="tl-cite-ref">LP-7.3</span>
+     </button>
+
+   Variants by source kind (set on the element):
+     .tl-cite--doc      packet/policy/contract section  (default)
+     .tl-cite--live     public web source (live demos)
+     .tl-cite--derived  arithmetic computed by the agent
+
+   The --derived variant exists because "we did this math" is a
+   different trust claim than "we read this somewhere": derived
+   chips expand to the formula, not a URL.
+   ------------------------------------------------------------ */
+.tl-cite {
+  display: inline-flex; align-items: center; gap: .3rem;
+  height: var(--tl-chip-h);
+  padding: 0 .5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent-bright);
+  cursor: pointer;
+  vertical-align: baseline;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+.tl-cite:hover,
+.tl-cite[aria-expanded="true"] {
+  border-color: var(--border-active);
+  background: var(--surface-raised);
+}
+.tl-cite::before {
+  content: "§";
+  color: var(--text-tertiary);
+  font-size: .9em;
+}
+.tl-cite--live::before    { content: "↗"; }
+.tl-cite--derived::before { content: "="; }
+.tl-cite--derived         { color: var(--text-secondary); }
+
+/* Expanded source panel (Phase B toggles [hidden]) */
+.tl-cite-panel {
+  margin: .4rem 0 .6rem;
+  padding: .6rem var(--tl-inset);
+  border-left: 2px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.tl-cite-panel .verbatim {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  display: block; margin-top: .35rem;
+}
+
+/* ------------------------------------------------------------
+   §2 · CONFIDENCE TAG  ·  .tl-conf
+   Three states only. There is deliberately no percentage and
+   no meter — a bar invites false precision, and competitor
+   scorecard scales (letter grades, numeric bands) are on the
+   forbidden-layout list. Confidence here is categorical:
+   the agent either verified it, qualified it, or routed it.
+
+   Markup:
+     <span class="tl-conf tl-conf--verified">verified</span>
+     <span class="tl-conf tl-conf--qualified">single source</span>
+     <span class="tl-conf tl-conf--routed">routed to review</span>
+
+   Text inside the tag is free (e.g. "two sources", "arithmetic
+   shown", "unverified — desk check") — the state class carries
+   the meaning, the text carries the reason.
+   ------------------------------------------------------------ */
+.tl-conf {
+  display: inline-flex; align-items: center; gap: .35rem;
+  height: var(--tl-chip-h);
+  padding: 0 .55rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.tl-conf::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; flex: none;
+}
+.tl-conf--verified  { color: var(--ok);   background: var(--ok-dim); }
+.tl-conf--qualified { color: var(--warn); background: var(--warn-dim); }
+.tl-conf--routed    { color: var(--text-secondary); background: var(--surface-raised);
+                      border: var(--tl-hairline); }
+
+/* ------------------------------------------------------------
+   §3 · AS-OF / FRESHNESS STAMP  ·  .tl-asof
+   Every material figure and every generated artifact carries
+   one. Two scopes:
+     block scope — stamps a whole card/section
+     inline scope — stamps a single datum
+
+   Markup:
+     <time class="tl-asof" datetime="2026-07-07T06:03:00-04:00">
+       compiled 6:03 am · Jul 7
+     </time>
+     <time class="tl-asof tl-asof--stale" ...>packet: FYE 2025</time>
+
+   --stale is not an error state; it marks data older than the
+   surface's freshness expectation (e.g. a 14-month-old review
+   meeting in the attrition packet). Stale is information.
+   ------------------------------------------------------------ */
+.tl-asof {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+.tl-asof::before { content: "◷"; font-size: .95em; }
+.tl-asof--stale  { color: var(--warn); }
+
+/* ------------------------------------------------------------
+   §4 · EXCEPTION ROW  ·  .tl-exc
+   The physical form of "illegible fields become exceptions,
+   never guesses." An exception row always answers three
+   questions in fixed order: WHAT failed · WHY it failed ·
+   WHAT RESOLVES it. Resolution is never optional — an
+   exception without a resolution path is a bug, not a design
+   choice.
+
+   Markup:
+     <div class="tl-exc" role="listitem">
+       <span class="tl-exc-field">EIN</span>
+       <span class="tl-exc-why">partially illegible on fax</span>
+       <span class="tl-exc-fix">request re-fax or W-9 · Deposit Ops</span>
+     </div>
+
+   Severity variants:
+     .tl-exc--hold   blocks downstream processing (default)
+     .tl-exc--note   informational; processing continues
+
+   Grid, not flex: the three columns align across rows so a
+   stack of exceptions reads as a ledger, which is the point.
+   ------------------------------------------------------------ */
+.tl-exc {
+  display: grid;
+  grid-template-columns: minmax(6rem, .8fr) 1.4fr 1.4fr;
+  gap: 1rem;
+  padding: var(--tl-inset);
+  border: var(--tl-hairline);
+  border-left: 2px solid var(--warn);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: var(--text-sm);
+}
+.tl-exc + .tl-exc { margin-top: .5rem; }
+.tl-exc--note { border-left-color: var(--text-tertiary); }
+.tl-exc-field {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  align-self: start;
+  padding-top: .1rem;
+}
+.tl-exc-why { color: var(--text-secondary); }
+.tl-exc-fix { color: var(--text-primary); }
+.tl-exc-fix::before {
+  content: "resolves: ";
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+@media (max-width: 720px) {
+  .tl-exc { grid-template-columns: 1fr; gap: .35rem; }
+}
+
+/* ------------------------------------------------------------
+   §5 · ENGAGEMENT-MODE MARKER  ·  .tl-engage
+   Names a cross-check the fictional packet cannot support,
+   without simulating it. This is a *capability statement*,
+   not an apology: the copy pattern is
+       [check name] — requires bank data · engagement mode
+   It renders deliberately quieter than everything around it
+   (no fill, dashed hairline) so it reads as an honest edge of
+   the demo, never as a broken feature.
+
+   Markup:
+     <div class="tl-engage" role="note">
+       <span class="tl-engage-check">90-day balance baseline validation</span>
+       <span class="tl-engage-tag">requires bank data · engagement mode</span>
+     </div>
+
+   Grouped form (list of several named checks under one tag):
+     <div class="tl-engage">
+       <span class="tl-engage-check">…</span>
+       <span class="tl-engage-check">…</span>
+       <span class="tl-engage-tag">…</span>
+     </div>
+   ------------------------------------------------------------ */
+.tl-engage {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: .35rem 1rem;
+  padding: .65rem var(--tl-inset);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+}
+.tl-engage-check {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.tl-engage-check + .tl-engage-check::before {
+  content: "· "; color: var(--text-tertiary);
+}
+.tl-engage-tag {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------
+   §6 · HUMAN-APPROVAL GATE  ·  .tl-gate
+   The visual form of "you draft; you never decide." Sits at
+   the end of any artifact whose production version routes to
+   a named human (SAR narrative, credit recommendation, filing
+   checklist, retention play). Two parts: the holder line
+   (WHO decides) and the gate state.
+
+   Demo pages render state "draft" only — the demo never
+   simulates an approval. The approved/returned states exist
+   in the kit because Phase B engagement builds use them.
+
+   Markup:
+     <div class="tl-gate" data-state="draft">
+       <span class="tl-gate-state">Draft</span>
+       <span class="tl-gate-holder">Filing decision rests with the BSA Officer</span>
+     </div>
+
+   States (data-state attr): draft · approved · returned
+   ------------------------------------------------------------ */
+.tl-gate {
+  display: flex; align-items: center; gap: .875rem;
+  margin-top: 1.25rem;
+  padding: var(--tl-inset);
+  border: var(--tl-hairline);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.tl-gate::before {
+  content: ""; width: 10px; height: 10px; border-radius: 50%;
+  flex: none;
+  background: var(--text-tertiary);
+}
+.tl-gate-state {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  flex: none;
+}
+.tl-gate-holder {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+.tl-gate[data-state="draft"]::before    { background: var(--warn);
+  box-shadow: 0 0 8px var(--warn-dim); }
+.tl-gate[data-state="approved"]::before { background: var(--ok); }
+.tl-gate[data-state="returned"]::before { background: var(--alert); }
+.tl-gate[data-state="approved"] .tl-gate-state { color: var(--ok); }
+.tl-gate[data-state="returned"] .tl-gate-state { color: var(--alert); }
+
+/* ------------------------------------------------------------
+   ACCESSIBILITY & MOTION
+   Focus follows the site-wide :focus-visible rule from the
+   tokens file. The trust layer introduces no animation beyond
+   the token fast-transition on interactive chips; under
+   reduced motion, even that is dropped.
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .tl-cite { transition: none; }
+}
+
+/* ------------------------------------------------------------
+   BOSS MIGRATION NOTE (do not delete)
+   BOSS_Demo.html currently carries an inline light palette
+   (Slate/Tailwind: #F8FAFC ground, #3B82F6 accent, per-color
+   badge scales) predating this system. Under the Phase A
+   design law it is out of palette. Phase B chunk that absorbs
+   BOSS must: (1) replace its palette constants with these
+   token vars; (2) replace its Badge component with .tl-conf /
+   .tl-asof / .tl-gate as semantically appropriate; (3) keep
+   its structural IA (sidebar + queue roll-up) — structure is
+   where surfaces are allowed to differ.
+   ------------------------------------------------------------ */

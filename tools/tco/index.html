@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banking AI TCO & ROI Calculator · Catalyst-DNA</title>
+<meta name="description" content="Bottoms-up unit economics for banking AI use cases: credit memo automation, document processing, contact-center deflection, and banker briefing agents. Cost per unit, monthly run-rate, build-vs-SaaS break-even, and payback — with every assumption editable.">
+<link rel="canonical" href="https://catalyst-dna.com/tools/tco/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://catalyst-dna.com/tools/tco/">
+<meta property="og:title" content="Banking AI TCO & ROI Calculator">
+<meta property="og:description" content="What will it actually cost to run AI in production at your bank — and where's the break-even vs. a vendor SaaS? Bottoms-up unit economics, every assumption editable.">
+<meta property="og:site_name" content="Catalyst-DNA">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Banking AI TCO & ROI Calculator","url":"https://catalyst-dna.com/tools/tco/","applicationCategory":"FinanceApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Catalyst-DNA","url":"https://catalyst-dna.com"}}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-primary:#09090B; --surface:#18181B; --surface-raised:#1F1F24;
+  --border:#27272A; --border-active:#33415C;
+  --text-primary:#FAFAFA; --text-secondary:#A1A1AA; --text-tertiary:#6F6F78;
+  --accent:#2E71E5; --accent-bright:#6FA2F5;
+  --accent-glow:rgba(46,113,229,.32); --accent-wash:rgba(46,113,229,.08);
+  --viz-contrast:#E0A43C;
+  --font-display:"Outfit",system-ui,sans-serif;
+  --font-body:"DM Sans",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1.0625rem;
+  --text-lg:1.25rem; --text-2xl:2.25rem;
+  --duration-fast:150ms; --ease-out:cubic-bezier(.22,1,.36,1);
+  --radius-sm:6px; --radius-md:10px; --tracking-eyebrow:.14em;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-body);
+  font-size:var(--text-base);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-bright);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 2rem;backdrop-filter:blur(12px);background:rgba(9,9,11,.72);border-bottom:1px solid var(--border)}
+.nav .brand{font-family:var(--font-display);font-weight:600;font-size:1.05rem;color:var(--text-primary)}
+.nav .brand em{font-style:normal;color:var(--accent-bright)}
+.nav .links{display:flex;gap:1.75rem;font-size:var(--text-sm)}
+.nav .links a{color:var(--text-secondary);transition:color var(--duration-fast) var(--ease-out)}
+.nav .links a:hover,.nav .links a[aria-current]{color:var(--text-primary)}
+@media(max-width:720px){.nav .links{display:none}}
+.btn{display:inline-flex;align-items:center;gap:.5rem;font-weight:500;font-size:var(--text-sm);
+  padding:.8rem 1.4rem;border-radius:var(--radius-sm);
+  transition:box-shadow var(--duration-fast) var(--ease-out),transform var(--duration-fast) var(--ease-out)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{box-shadow:0 0 24px var(--accent-glow);transform:translateY(-1px)}
+
+.wrap{max-width:72rem;margin:0 auto;padding:0 1.5rem}
+.eyebrow{font-family:var(--font-mono);font-size:var(--text-xs);font-weight:500;
+  letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--accent-bright)}
+.head{padding:4rem 0 2.2rem}
+.head h1{font-family:var(--font-display);font-weight:700;font-size:clamp(1.9rem,4.5vw,2.9rem);
+  letter-spacing:-.015em;line-height:1.12;margin:.9rem 0 1rem}
+.head .sub{color:var(--text-secondary);font-size:var(--text-lg);max-width:44rem}
+
+.tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:2.2rem 0 0}
+.tab{border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem 1rem;
+  font-size:var(--text-sm);color:var(--text-secondary);
+  transition:border-color var(--duration-fast) var(--ease-out),background var(--duration-fast) var(--ease-out)}
+.tab:hover{border-color:var(--border-active)}
+.tab.on{border-color:var(--accent);background:var(--accent-wash);color:var(--text-primary)}
+.presets{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:1rem 0 0;
+  font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-tertiary);
+  text-transform:uppercase;letter-spacing:.08em}
+.preset{border:1px solid var(--border);border-radius:4px;padding:.3rem .6rem;color:var(--text-secondary)}
+.preset.on{border-color:var(--accent);color:var(--accent-bright)}
+
+.grid{display:grid;grid-template-columns:minmax(0,26rem) 1fr;gap:2.2rem;padding:2.2rem 0 5rem;align-items:start}
+@media(max-width:960px){.grid{grid-template-columns:1fr}}
+
+.panel h2{font-family:var(--font-display);font-weight:600;font-size:var(--text-lg);margin:1.6rem 0 .9rem}
+.panel h2:first-child{margin-top:0}
+.field{display:grid;grid-template-columns:1fr 7.5rem;gap:.8rem;align-items:center;
+  padding:.45rem 0;font-size:var(--text-sm);color:var(--text-secondary)}
+.field label b{color:var(--text-primary);font-weight:500}
+.field .hint{display:block;font-size:var(--text-xs);color:var(--text-tertiary)}
+.field input,.field select{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text-primary);font-family:var(--font-mono);font-size:var(--text-sm);
+  padding:.5rem .6rem;width:100%;
+  transition:border-color var(--duration-fast) var(--ease-out)}
+.field input:hover,.field select:hover{border-color:var(--border-active)}
+.field input:focus,.field select:focus{border-color:var(--accent);outline:none}
+
+.results{position:sticky;top:5.2rem}
+@media(max-width:960px){.results{position:static}}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+@media(max-width:640px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.1rem 1.2rem}
+.kpi .v{font-family:var(--font-display);font-weight:600;font-size:1.55rem;color:var(--accent-bright)}
+.kpi .l{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text-tertiary);margin-top:.3rem;line-height:1.5}
+.kpi.warn .v{color:var(--viz-contrast)}
+canvas#chart{width:100%;height:280px;display:block;margin-top:1.2rem;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
+.legend{display:flex;gap:1.6rem;margin-top:.7rem;font-family:var(--font-mono);
+  font-size:var(--text-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary)}
+.legend i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:.45rem}
+.verdict{margin-top:1.4rem;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-md);padding:1.2rem 1.3rem;font-size:var(--text-sm);color:var(--text-secondary)}
+.verdict b{color:var(--text-primary);font-weight:500}
+.res-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.4rem}
+.btn-ghost{border:1px solid var(--border);color:var(--text-primary)}
+.btn-ghost:hover{border-color:var(--border-active)}
+
+.assumptions{border-top:1px solid var(--border);padding:2.4rem 0 3rem}
+.assumptions .note{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-tertiary);
+  letter-spacing:.05em;line-height:2;max-width:56rem}
+.footer{border-top:1px solid var(--border);padding:2rem;display:flex;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;font-size:var(--text-sm);color:var(--text-tertiary)}
+@media print{.nav,.res-actions,.footer{display:none!important}body{background:#fff;color:#111}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">Catalyst<em>-DNA</em></div>
+  <div class="links">
+    <a href="/#services">Services</a><a href="/finai-1000/">Data Products</a><a href="/insights/">Insights</a><a href="/about/">About</a>
+  </div>
+  <a class="btn btn-primary" href="/#contact" style="padding:.55rem 1rem">Book a working session</a>
+</nav>
+
+<header class="head">
+  <div class="wrap">
+    <div class="eyebrow">Tools · FinAI TCO</div>
+    <h1>What will AI actually cost to run at your bank?</h1>
+    <p class="sub">Bottoms-up unit economics for the four most common first deployments. Pick a use case, set your volumes, and see cost per unit, monthly run-rate, payback, and where building beats buying. Every assumption is editable — replace our defaults with your numbers.</p>
+    <div class="tabs" id="tabs"></div>
+    <div class="presets" id="presets"><span style="margin-right:.4rem">Bank size preset:</span></div>
+  </div>
+</header>
+
+<div class="wrap grid">
+  <!-- ============ INPUTS ============ -->
+  <div class="panel" id="inputs"></div>
+
+  <!-- ============ RESULTS ============ -->
+  <div class="results">
+    <div class="kpis" id="kpis"></div>
+    <canvas id="chart"></canvas>
+    <div class="legend">
+      <span><i style="background:#2E71E5"></i>Build &amp; run</span>
+      <span><i style="background:#E0A43C"></i>Vendor SaaS</span>
+      <span><i style="background:#6F6F78"></i>Break-even</span>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <div class="res-actions">
+      <a class="btn btn-primary" href="/#contact">Pressure-test these numbers with us</a>
+      <button class="btn btn-ghost" onclick="window.print()">Save as PDF</button>
+    </div>
+  </div>
+</div>
+
+<section class="assumptions">
+  <div class="wrap">
+    <div class="eyebrow">Assumptions &amp; sources</div>
+    <div class="note">
+      Default model prices reflect published price cards as of July 2026: frontier tier $5 / $25 per million input / output tokens,
+      balanced tier $3 / $15, efficient tier $1 / $5 (claude.com/pricing; comparable tiers exist across providers).
+      Document OCR defaults reflect Azure Document Intelligence list pricing: layout / prebuilt analysis at $10 per 1,000 pages
+      (azure.microsoft.com/pricing/details/document-intelligence).
+      SaaS comparator defaults are generic placeholders — replace them with your actual vendor quote.
+      Volume, labor, and build-cost defaults are Catalyst-DNA operator estimates for a mid-size community bank; adjust all of them to your institution.
+      Outputs are directional estimates for planning, not quotes, accounting advice, or investment advice.
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <span>© 2026 Catalyst-DNA LLC</span>
+  <span>Free to use · Assumptions open · <a href="/tools/ai-readiness/" style="color:inherit">AI Readiness Self-Assessment →</a></span>
+</footer>
+
+<script>
+/* ============ PRICE CARDS (July 2026, editable in UI) ============ */
+const MODEL_TIERS = {
+  frontier: { label:"Frontier ($5 / $25 per MTok)",  inp:5,  out:25 },
+  balanced: { label:"Balanced ($3 / $15 per MTok)",  inp:3,  out:15 },
+  efficient:{ label:"Efficient ($1 / $5 per MTok)",  inp:1,  out:5  },
+};
+const OCR_PER_PAGE = 0.01;   // layout/prebuilt $10 per 1,000 pages
+
+/* ============ USE CASES ============
+   Every number below is a DEFAULT rendered into an editable field. */
+const UC = [
+{ id:"memo", name:"Credit memo automation",
+  unit:"memo", unitPlural:"memos",
+  fields:{
+    vol:      { l:"Credit memos per month", h:"Commercial + CRE underwriting volume", v:100, scale:true },
+    pages:    { l:"Pages OCR'd per memo", h:"Financials, tax returns, rent rolls", v:40 },
+    tokIn:    { l:"Input tokens per memo (k)", h:"Documents + policy + templates", v:60 },
+    tokOut:   { l:"Output tokens per memo (k)", h:"Draft memo + consistency checks", v:6 },
+    tier:     { l:"Model tier", v:"frontier", opts:true },
+    minsSaved:{ l:"Analyst minutes saved per memo", h:"Drafting, spreading, consistency review", v:210 },
+    rate:     { l:"Loaded hourly cost ($)", h:"Credit analyst, fully loaded", v:60 },
+    build:    { l:"One-time build cost ($k)", h:"Design, build, deploy, validate", v:120 },
+    maint:    { l:"Annual maintenance (% of build)", v:18 },
+    infra:    { l:"Infra base ($/month)", h:"Hosting, orchestration, monitoring", v:1500 },
+    saasBase: { l:"SaaS platform fee ($/month)", h:"Replace with your vendor quote", v:8000 },
+    saasUnit: { l:"SaaS fee per memo ($)", h:"Replace with your vendor quote", v:25 },
+  }},
+{ id:"docs", name:"Document processing",
+  unit:"document", unitPlural:"documents",
+  fields:{
+    vol:      { l:"Documents per month", h:"Loan files, onboarding packets, exceptions", v:3000, scale:true },
+    pages:    { l:"Pages OCR'd per document", v:5 },
+    tokIn:    { l:"Input tokens per document (k)", v:8 },
+    tokOut:   { l:"Output tokens per document (k)", v:1 },
+    tier:     { l:"Model tier", v:"balanced", opts:true },
+    minsSaved:{ l:"Staff minutes saved per document", h:"Keying, classification, exception handling", v:12 },
+    rate:     { l:"Loaded hourly cost ($)", h:"Operations staff, fully loaded", v:40 },
+    build:    { l:"One-time build cost ($k)", v:80 },
+    maint:    { l:"Annual maintenance (% of build)", v:18 },
+    infra:    { l:"Infra base ($/month)", v:1200 },
+    saasBase: { l:"SaaS platform fee ($/month)", h:"Replace with your vendor quote", v:4000 },
+    saasUnit: { l:"SaaS fee per document ($)", h:"Replace with your vendor quote", v:0.60 },
+  }},
+{ id:"contact", name:"Contact-center deflection",
+  unit:"deflected conversation", unitPlural:"deflected conversations",
+  fields:{
+    vol:      { l:"Inbound contacts per month", h:"Calls + chats to the contact center", v:6000, scale:true },
+    deflect:  { l:"Deflection rate (%)", h:"Share fully contained by the assistant", v:35 },
+    tokIn:    { l:"Input tokens per conversation (k)", v:8 },
+    tokOut:   { l:"Output tokens per conversation (k)", v:1.5 },
+    tier:     { l:"Model tier", v:"balanced", opts:true },
+    costCall: { l:"Cost per human-handled contact ($)", h:"Fully loaded — replace with your number", v:7 },
+    build:    { l:"One-time build cost ($k)", v:110 },
+    maint:    { l:"Annual maintenance (% of build)", v:18 },
+    infra:    { l:"Infra base ($/month)", v:1500 },
+    saasBase: { l:"SaaS platform fee ($/month)", h:"Replace with your vendor quote", v:5000 },
+    saasUnit: { l:"SaaS fee per deflected conversation ($)", h:"Replace with your vendor quote", v:2.00 },
+  }},
+{ id:"brief", name:"Banker briefing agent",
+  unit:"briefing", unitPlural:"briefings",
+  fields:{
+    vol:      { l:"Briefings per month", h:"Pre-meeting relationship briefings", v:400, scale:true },
+    tokIn:    { l:"Input tokens per briefing (k)", h:"Core extracts, CRM, news, filings", v:30 },
+    tokOut:   { l:"Output tokens per briefing (k)", v:3 },
+    tier:     { l:"Model tier", v:"frontier", opts:true },
+    minsSaved:{ l:"Banker minutes saved per briefing", h:"Prep the banker no longer does by hand", v:45 },
+    rate:     { l:"Loaded hourly cost ($)", h:"Relationship banker, fully loaded", v:75 },
+    build:    { l:"One-time build cost ($k)", v:90 },
+    maint:    { l:"Annual maintenance (% of build)", v:18 },
+    infra:    { l:"Infra base ($/month)", v:1200 },
+    saasBase: { l:"SaaS platform fee ($/month)", h:"Replace with your vendor quote", v:5000 },
+    saasUnit: { l:"SaaS fee per briefing ($)", h:"Replace with your vendor quote", v:8 },
+  }},
+];
+
+const PRESETS = [
+  { label:"$1B",  k:0.4 }, { label:"$3B", k:1 }, { label:"$10B", k:2.5 }, { label:"$25B", k:5 },
+];
+
+/* ============ STATE ============ */
+let cur = 0, presetIdx = 1;
+const state = UC.map(u => Object.fromEntries(Object.entries(u.fields).map(([k, f]) => [k, f.v])));
+const $ = id => document.getElementById(id);
+const fmt$ = n => n >= 1000 ? '$' + Math.round(n).toLocaleString() : '$' + (Math.round(n * 100) / 100).toLocaleString();
+
+/* ============ MODEL ============ */
+function compute(u, s){
+  const tier = MODEL_TIERS[s.tier];
+  const llmUnit = (s.tokIn * 1000 / 1e6) * tier.inp + (s.tokOut * 1000 / 1e6) * tier.out;
+  const ocrUnit = (s.pages || 0) * OCR_PER_PAGE;
+  const unitCost = llmUnit + ocrUnit;
+
+  const units = u.id === 'contact' ? s.vol * (s.deflect / 100) : s.vol;   // billable/value units
+  const apiMonthly = units * unitCost;
+  const maintMonthly = (s.build * 1000) * (s.maint / 100) / 12;
+  const runMonthly = apiMonthly + s.infra + maintMonthly;
+
+  const valueMonthly = u.id === 'contact'
+    ? units * s.costCall
+    : units * (s.minsSaved / 60) * s.rate;
+
+  const netMonthly = valueMonthly - runMonthly;
+  const payback = netMonthly > 0 ? (s.build * 1000) / netMonthly : null;
+
+  const saasMonthly = s.saasBase + units * s.saasUnit;
+
+  // 36-month cumulative cost curves
+  const buildCurve = [], saasCurve = [];
+  let be = null;
+  for (let m = 1; m <= 36; m++){
+    buildCurve.push(s.build * 1000 + runMonthly * m);
+    saasCurve.push(saasMonthly * m);
+    if (be === null && buildCurve[m-1] <= saasCurve[m-1]) be = m;
+  }
+  return { unitCost, units, runMonthly, valueMonthly, netMonthly, payback,
+           saasMonthly, buildCurve, saasCurve, be,
+           tco3Build: buildCurve[35], tco3Saas: saasCurve[35] };
+}
+
+/* ============ RENDER: TABS / PRESETS / INPUTS ============ */
+function renderTabs(){
+  $('tabs').innerHTML = '';
+  UC.forEach((u, i) => {
+    const b = document.createElement('button');
+    b.className = 'tab' + (i === cur ? ' on' : '');
+    b.textContent = u.name;
+    b.onclick = () => { cur = i; renderTabs(); renderInputs(); renderResults(); };
+    $('tabs').appendChild(b);
+  });
+  document.querySelectorAll('.preset').forEach(p => p.remove());
+  PRESETS.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.className = 'preset' + (i === presetIdx ? ' on' : '');
+    b.textContent = p.label;
+    b.onclick = () => {
+      presetIdx = i;
+      UC.forEach((u, ui) => Object.entries(u.fields).forEach(([k, f]) => {
+        if (f.scale) state[ui][k] = Math.round(f.v * p.k);
+      }));
+      renderTabs(); renderInputs(); renderResults();
+    };
+    $('presets').appendChild(b);
+  });
+}
+
+function renderInputs(){
+  const u = UC[cur], s = state[cur], box = $('inputs');
+  box.innerHTML = '<h2>' + u.name + ' — assumptions</h2>';
+  Object.entries(u.fields).forEach(([k, f]) => {
+    const row = document.createElement('div'); row.className = 'field';
+    const lab = document.createElement('label');
+    lab.innerHTML = '<b>' + f.l + '</b>' + (f.h ? '<span class="hint">' + f.h + '</span>' : '');
+    row.appendChild(lab);
+    let input;
+    if (f.opts){
+      input = document.createElement('select');
+      Object.entries(MODEL_TIERS).forEach(([id, t]) => {
+        const o = document.createElement('option');
+        o.value = id; o.textContent = t.label; o.selected = s[k] === id;
+        input.appendChild(o);
+      });
+      input.onchange = () => { s[k] = input.value; renderResults(); };
+    } else {
+      input = document.createElement('input');
+      input.type = 'number'; input.value = s[k]; input.min = 0; input.step = 'any';
+      input.oninput = () => { const v = parseFloat(input.value); if (!isNaN(v) && v >= 0){ s[k] = v; renderResults(); } };
+    }
+    row.appendChild(input);
+    box.appendChild(row);
+  });
+}
+
+/* ============ RENDER: RESULTS ============ */
+function renderResults(){
+  const u = UC[cur], s = state[cur], r = compute(u, s);
+  const kp = [
+    { v: fmt$(r.unitCost), l: 'AI cost per ' + u.unit },
+    { v: fmt$(r.runMonthly), l: 'Monthly run-rate, all-in' },
+    { v: fmt$(r.valueMonthly), l: 'Monthly value created' },
+    { v: r.payback ? (Math.round(r.payback * 10) / 10) + ' mo' : '—', l: 'Payback on build cost', warn: !r.payback },
+    { v: r.be ? 'Month ' + r.be : 'Beyond 36 mo', l: 'Break-even vs SaaS', warn: !r.be },
+    { v: fmt$(Math.abs(r.tco3Saas - r.tco3Build)), l: (r.tco3Saas >= r.tco3Build ? 'Saved' : 'Extra cost') + ' vs SaaS over 3 yrs', warn: r.tco3Saas < r.tco3Build },
+  ];
+  $('kpis').innerHTML = '';
+  kp.forEach(k => {
+    const d = document.createElement('div'); d.className = 'kpi' + (k.warn ? ' warn' : '');
+    d.innerHTML = '<div class="v">' + k.v + '</div><div class="l">' + k.l + '</div>';
+    $('kpis').appendChild(d);
+  });
+
+  drawChart(r);
+
+  const monthlyDelta = r.saasMonthly - r.runMonthly;
+  $('verdict').innerHTML =
+    '<b>' + Math.round(r.units).toLocaleString() + ' ' + u.unitPlural + '/month:</b> ' +
+    'running this yourself costs <b>' + fmt$(r.runMonthly) + '/month</b> all-in vs <b>' + fmt$(r.saasMonthly) + '/month</b> on the SaaS assumptions above (' +
+    (monthlyDelta >= 0 ? fmt$(monthlyDelta) + '/month cheaper to run' : fmt$(-monthlyDelta) + '/month more expensive to run') + '). ' +
+    (r.be ? 'The one-time build cost is recovered against SaaS by <b>month ' + r.be + '</b>. ' :
+            'At these volumes the build cost is not recovered against SaaS within 36 months — SaaS or a smaller build scope wins on cost. ') +
+    (r.payback ? 'Against the value created, the build pays for itself in <b>' + (Math.round(r.payback * 10) / 10) + ' months</b>.' :
+                 'Value created does not cover the run-rate at these assumptions — revisit volumes or scope.');
+}
+
+/* ============ CHART: 36-month cumulative, canvas ============ */
+function drawChart(r){
+  const c = $('chart'), dpr = Math.min(devicePixelRatio || 1, 2);
+  const W = c.offsetWidth, H = 280;
+  c.width = W * dpr; c.height = H * dpr;
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  x.clearRect(0, 0, W, H);
+  const P = { l: 62, r: 16, t: 18, b: 30 };
+  const maxY = Math.max(r.buildCurve[35], r.saasCurve[35]) * 1.08;
+  const px = m => P.l + (m - 1) / 35 * (W - P.l - P.r);
+  const py = v => H - P.b - (v / maxY) * (H - P.t - P.b);
+
+  // grid + y labels
+  x.strokeStyle = '#232327'; x.fillStyle = '#6F6F78';
+  x.font = '10px "JetBrains Mono", monospace'; x.textAlign = 'right';
+  for (let i = 0; i <= 4; i++){
+    const v = maxY * i / 4, y = py(v);
+    x.beginPath(); x.moveTo(P.l, y); x.lineTo(W - P.r, y); x.stroke();
+    x.fillText(v >= 1e6 ? '$' + (v/1e6).toFixed(1) + 'M' : '$' + Math.round(v/1000) + 'k', P.l - 8, y + 3);
+  }
+  // x labels
+  x.textAlign = 'center';
+  [6, 12, 18, 24, 30, 36].forEach(m => x.fillText('m' + m, px(m), H - 10));
+
+  // break-even marker
+  if (r.be){
+    x.strokeStyle = '#6F6F78'; x.setLineDash([4, 4]);
+    x.beginPath(); x.moveTo(px(r.be), P.t); x.lineTo(px(r.be), H - P.b); x.stroke();
+    x.setLineDash([]);
+  }
+  // curves
+  const line = (curve, color) => {
+    x.strokeStyle = color; x.lineWidth = 2; x.beginPath();
+    curve.forEach((v, i) => i === 0 ? x.moveTo(px(1), py(v)) : x.lineTo(px(i + 1), py(v)));
+    x.stroke();
+  };
+  line(r.saasCurve, '#E0A43C');
+  line(r.buildCurve, '#2E71E5');
+}
+
+renderTabs(); renderInputs(); renderResults();
+addEventListener('resize', renderResults);
+</script>
+</body>
+</html>

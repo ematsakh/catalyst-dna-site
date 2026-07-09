@@ -1,0 +1,212 @@
+/* ============================================================
+   CATALYST-DNA DESIGN TOKENS  ·  v1.0  ·  July 2026
+   Two registers, one accent system.
+   - Dark register  = marketing/product pages (default, :root)
+   - Paper register = Insights/research pages (data-register="paper")
+   Drop-in: link this file before site CSS, reference vars only.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   REGISTER 1 · DARK  (marketing, services, data products)
+   Keeps existing base surfaces. Accent moved OFF Tailwind
+   blue-500 (#3B82F6) to an ownable, slightly deeper electric
+   blue. Everything else in this register is unchanged intent.
+   ------------------------------------------------------------ */
+:root {
+  /* Surfaces (unchanged from current build) */
+  --bg-primary:      #09090B;   /* page ground */
+  --surface:         #18181B;   /* cards, panels */
+  --surface-raised:  #1F1F24;   /* card hover / modals — NEW */
+  --border:          #27272A;   /* default hairlines */
+  --border-active:   #33415C;   /* accent-tinted border on hover/focus — NEW */
+
+  /* Text */
+  --text-primary:    #FAFAFA;
+  --text-secondary:  #A1A1AA;
+  --text-tertiary:   #6F6F78;   /* captions, timestamps — NEW */
+
+  /* Accent — the one refinement. NOT a Tailwind hex. */
+  --accent:          #2E71E5;   /* primary accent: CTAs, key numbers, active nav */
+  --accent-bright:   #6FA2F5;   /* links in running text, hover states (AA on dark) */
+  --accent-glow:     rgba(46, 113, 229, 0.32);  /* box-shadow glow only */
+  --accent-wash:     rgba(46, 113, 229, 0.08);  /* selected-state fills only */
+
+  /* Data-viz (FinAI 1000, charts). Max 4 hues per chart. */
+  --viz-challenger:  #2E71E5;   /* = accent. Challengers are the story. */
+  --viz-incumbent:   #8B93A3;   /* neutral slate — incumbents recede */
+  --viz-highlight:   #4CC3E8;   /* selection / hover state in viz */
+  --viz-contrast:    #E0A43C;   /* single warm contrast, use sparingly */
+  --viz-grid:        #232327;   /* chart gridlines */
+
+  /* Type stack (unchanged families, formalized scale) */
+  --font-display:    "Outfit", system-ui, sans-serif;
+  --font-body:       "DM Sans", system-ui, sans-serif;
+  --font-mono:       "JetBrains Mono", ui-monospace, monospace;
+
+  /* Type scale — 1.25 ratio, rem-based */
+  --text-xs:   0.75rem;   /* mono eyebrows, chart captions */
+  --text-sm:   0.875rem;  /* secondary UI, card meta */
+  --text-base: 1.0625rem; /* body — 17px, not 16: small legibility edge */
+  --text-lg:   1.25rem;   /* lead paragraphs, card titles */
+  --text-xl:   1.625rem;  /* section subheads */
+  --text-2xl:  2.25rem;   /* section titles */
+  --text-3xl:  3.25rem;   /* page titles */
+  --text-hero: clamp(2.75rem, 6vw, 4.5rem);  /* hero only */
+
+  --leading-tight: 1.15;  /* display sizes */
+  --leading-body:  1.6;   /* running text */
+  --tracking-eyebrow: 0.14em;  /* mono labels, uppercase */
+
+  /* Motion — precision, not decoration */
+  --duration-fast: 150ms;   /* hovers, borders */
+  --duration-base: 240ms;   /* reveals, fades */
+  --duration-slow: 400ms;   /* hero sequences only */
+  --ease-out:  cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-move: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --content-max: 72rem;     /* marketing sections */
+  --prose-max:   42rem;     /* any running text block */
+}
+
+/* ------------------------------------------------------------
+   REGISTER 2 · PAPER  (Insights, tentpole report, long-form)
+   Lab-research aesthetic: warm paper, dark ink, SAME accent
+   family — one brand accent on two grounds ties the registers
+   together. Serif display enters here and only here.
+   Apply via <body data-register="paper"> or a section wrapper.
+   ------------------------------------------------------------ */
+[data-register="paper"] {
+  /* Surfaces */
+  --bg-primary:      #FAF7F1;   /* warm paper — not cream-yellow, not clinical white */
+  --surface:         #FFFFFF;   /* figures, pull-quote cards sit on white */
+  --surface-raised:  #FFFFFF;
+  --border:          #E5E0D6;   /* warm hairlines */
+  --border-active:   #C7CFE0;
+
+  /* Text */
+  --text-primary:    #1C1C20;   /* ink — near the dark register's ground, softened */
+  --text-secondary:  #5C5A55;
+  --text-tertiary:   #8A867E;
+
+  /* Accent — same hue, darkened for paper contrast (≥7:1) */
+  --accent:          #1D53B8;   /* links, figure numbers, key stats */
+  --accent-bright:   #2E71E5;   /* hover state — the dark register's primary */
+  --accent-glow:     rgba(29, 83, 184, 0.14);
+  --accent-wash:     rgba(29, 83, 184, 0.06);
+
+  /* Data-viz on paper */
+  --viz-challenger:  #1D53B8;
+  --viz-incumbent:   #9A968C;
+  --viz-highlight:   #1A8FB8;
+  --viz-contrast:    #B87A1E;
+  --viz-grid:        #ECE8DF;
+
+  /* Type — serif display for research identity.
+     UI chrome (nav, buttons) STAYS in Outfit/DM Sans for brand
+     coherence; serif is reserved for article display + body. */
+  --font-display:    "Newsreader", "Outfit", serif;   /* report titles, H1–H2 */
+  --font-body:       "Source Serif 4", Georgia, serif; /* article body, 1.7 leading */
+  --font-mono:       "JetBrains Mono", ui-monospace, monospace; /* figure labels, sources */
+
+  --text-base: 1.125rem;  /* 18px body for long reading */
+  --leading-body: 1.7;
+}
+
+/* ------------------------------------------------------------
+   REFERENCE RULES — the tokens in use.
+   These encode the usage law; extend, don't override.
+   ------------------------------------------------------------ */
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+/* Mono eyebrow — the "we build" signature. Uppercase, tracked. */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Links: bright variant in running text, never raw accent on dark */
+a { color: var(--accent-bright); text-decoration-color: var(--border-active); }
+a:hover { text-decoration-color: currentColor; }
+
+/* Primary CTA — the ONLY place the glow lives */
+.btn-primary {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  transition: box-shadow var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+.btn-primary:hover {
+  box-shadow: 0 0 24px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+/* Card hover — border tint + lift, 150ms, nothing else */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+.card:hover {
+  border-color: var(--border-active);
+  background: var(--surface-raised);
+}
+
+/* Scroll reveal — single pattern site-wide, fires once */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--duration-base) var(--ease-out),
+              transform var(--duration-base) var(--ease-out);
+}
+.reveal.in-view { opacity: 1; transform: none; }
+
+/* Focus — visible, accent-tinted, never removed */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Accessibility floor */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+
+/* ------------------------------------------------------------
+   USAGE LAW (enforced by review, not CSS)
+   1. --accent appears in ≤3 places per viewport: one CTA,
+      one key number or eyebrow, one active-nav state. That's it.
+   2. Glow lives on .btn-primary and the hero viz. Nowhere else.
+   3. Charts: challenger blue is the protagonist; incumbent slate
+      recedes; --viz-contrast appears at most once per chart.
+   4. Serif never appears in the dark register. Mono never
+      exceeds --text-sm in either register.
+   5. No animation loops except the hero visualization.
+      Everything else fires once, ≤400ms.
+   ------------------------------------------------------------ */

@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interview Kit Generator — structured interviewer cockpit · Catalyst-DNA</title>
+<meta name="description" content="Name a role and level, get a structured kit — competency-mapped questions with strong-answer anchors, a skills matrix, a work sample, and scoring guidance. It never screens or ranks candidates: that boundary is the design.">
+<link rel="canonical" href="https://catalyst-dna.com/demos/interview-kit/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ==== catalyst-dna tokens (inlined per single-file law) ==== */
+:root{
+  --bg-primary:#09090B; --surface:#18181B; --surface-raised:#1F1F24;
+  --border:#27272A; --border-active:#33415C;
+  --text-primary:#FAFAFA; --text-secondary:#A1A1AA; --text-tertiary:#6F6F78;
+  --accent:#2E71E5; --accent-bright:#6FA2F5;
+  --accent-glow:rgba(46,113,229,.32); --warn:#E0A43C;
+  --font-display:"Outfit",system-ui,sans-serif;
+  --font-body:"DM Sans",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1.0625rem; --text-lg:1.25rem;
+  --duration-fast:150ms; --ease-out:cubic-bezier(.22,1,.36,1);
+  --radius-sm:6px; --radius-md:10px; --tracking-eyebrow:.14em;
+  --ok:#4C9E7E; --ok-dim:rgba(76,158,126,.14);
+  --warn-dim:rgba(224,164,60,.14);
+  --alert:#C4574E; --alert-dim:rgba(196,87,78,.14);
+  --tl-chip-h:1.375rem; --tl-inset:.875rem; --tl-hairline:1px solid var(--border);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-body);
+  font-size:var(--text-base);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-bright);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 2rem;backdrop-filter:blur(12px);background:rgba(9,9,11,.72);border-bottom:1px solid var(--border)}
+.nav .brand{font-family:var(--font-display);font-weight:600;font-size:1.05rem}
+.nav .brand em{font-style:normal;color:var(--accent-bright)}
+.nav .back{font-size:var(--text-sm);color:var(--text-secondary)}
+.nav .back:hover{color:var(--text-primary)}
+.wrap{max-width:48rem;margin:0 auto;padding:0 1.5rem}
+.eyebrow{font-family:var(--font-mono);font-size:var(--text-xs);font-weight:500;
+  letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--accent-bright)}
+.head{padding:3.4rem 0 1.8rem}
+.head h1{font-family:var(--font-display);font-weight:700;font-size:clamp(1.7rem,4vw,2.4rem);
+  letter-spacing:-.015em;line-height:1.12;margin:.8rem 0 .7rem}
+.head .sub{color:var(--text-secondary);max-width:40rem}
+.badge{display:inline-flex;align-items:center;gap:.45rem;margin-top:.9rem;
+  font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-bright)}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-bright);box-shadow:0 0 8px var(--accent-glow)}
+
+/* ==== trust layer ==== */
+.tl-engage{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem 1rem;
+  padding:.65rem var(--tl-inset);border:1px dashed var(--border);border-radius:var(--radius-sm)}
+.tl-engage--block{flex-direction:column;align-items:stretch;gap:.5rem}
+.tl-engage-check{font-size:var(--text-sm);color:var(--text-secondary)}
+.tl-engage-tag{font-family:var(--font-mono);font-size:var(--text-xs);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);white-space:nowrap}
+.tl-engage--block .tl-engage-tag{margin-left:0}
+.tl-engage-title{font-weight:500;font-size:var(--text-sm);color:var(--text-primary)}
+.tl-engage-boundary{font-size:var(--text-sm);color:var(--warn);font-style:italic}
+.tl-gate{display:flex;align-items:center;gap:.875rem;margin-top:1.25rem;padding:var(--tl-inset);
+  border:var(--tl-hairline);border-radius:var(--radius-md);background:var(--surface)}
+.tl-gate::before{content:"";width:10px;height:10px;border-radius:50%;flex:none;
+  background:var(--warn);box-shadow:0 0 8px var(--warn-dim)}
+.tl-gate-state{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text-secondary);flex:none}
+.tl-gate-holder{font-size:var(--text-sm);color:var(--text-primary)}
+
+/* ==== surface: structured interviewer cockpit ==== */
+.controls{display:grid;grid-template-columns:1.6fr 1fr auto;gap:.7rem;padding:1.2rem 0 .4rem}
+@media(max-width:680px){.controls{grid-template-columns:1fr}}
+.controls input,.controls select{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-body);
+  font-size:var(--text-sm);padding:.6rem .8rem}
+.controls input:focus,.controls select:focus{border-color:var(--border-active);outline:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;font-weight:500;font-size:var(--text-sm);
+  padding:.6rem 1.15rem;border:none;border-radius:var(--radius-sm);background:var(--accent);color:#fff;
+  cursor:pointer;font-family:var(--font-body);transition:box-shadow var(--duration-fast) var(--ease-out)}
+.btn:hover{box-shadow:0 0 24px var(--accent-glow)}
+.btn[disabled]{opacity:.55;cursor:wait;box-shadow:none}
+.note{font-size:var(--text-xs);color:var(--text-tertiary);font-family:var(--font-mono);padding:.3rem 0 1rem}
+
+.cockpit{padding:1.2rem 0 3.6rem;display:none}
+.cockpit.on{display:block}
+
+.framing{border:var(--tl-hairline);border-radius:var(--radius-md);background:var(--surface);
+  padding:1.1rem 1.2rem;margin-bottom:1rem}
+.framing .fr-role{font-family:var(--font-display);font-weight:600;font-size:var(--text-lg)}
+.framing .fr-level{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-tertiary);
+  text-transform:uppercase;letter-spacing:.08em;margin-left:.6rem}
+.framing .fr-text{font-size:var(--text-sm);color:var(--text-secondary);margin-top:.5rem}
+
+/* competency panels: questions with strong-answer anchors */
+.comp{border:var(--tl-hairline);border-radius:var(--radius-md);background:var(--surface);
+  padding:1.05rem 1.2rem;margin-bottom:.6rem}
+.comp h2,.band h2{font-family:var(--font-mono);font-size:var(--text-xs);font-weight:500;
+  letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--accent-bright);margin-bottom:.6rem}
+.q{padding:.55rem 0;border-top:1px solid var(--border)}
+.q:first-of-type{border-top:none;padding-top:0}
+.q .q-text{font-size:var(--text-sm)}
+.q .q-strong{font-size:var(--text-xs);color:var(--ok);margin-top:.3rem}
+.q .q-strong::before{content:"a strong answer includes: ";font-family:var(--font-mono);color:var(--text-tertiary)}
+
+.band{border:var(--tl-hairline);border-radius:var(--radius-md);background:var(--surface);
+  padding:1.05rem 1.2rem;margin-bottom:.6rem}
+.skill{display:grid;grid-template-columns:1fr 1.6fr;gap:1rem;align-items:baseline;
+  padding:.45rem 0;border-top:1px solid var(--border);font-size:var(--text-sm)}
+.skill:first-of-type{border-top:none;padding-top:0}
+.skill .s-name{font-weight:500}
+.skill .s-probe{color:var(--text-secondary)}
+@media(max-width:640px){.skill{grid-template-columns:1fr;gap:.2rem}}
+
+.sample{font-size:var(--text-sm);color:var(--text-secondary)}
+.sample .sa-time{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--warn);display:block;margin-top:.4rem}
+.sample .sa-time::before{content:"time budget: ";color:var(--text-tertiary)}
+
+/* anchors: strong / adequate / concern per competency */
+.anchor{padding:.6rem 0;border-top:1px solid var(--border)}
+.anchor:first-of-type{border-top:none;padding-top:0}
+.anchor .a-comp{font-weight:500;font-size:var(--text-sm);margin-bottom:.35rem}
+.anchor .a-row{display:grid;grid-template-columns:auto 1fr;gap:.7rem;align-items:baseline;
+  font-size:var(--text-xs);padding:.15rem 0}
+.anchor .a-tag{font-family:var(--font-mono);letter-spacing:.06em;text-transform:uppercase;
+  padding:.1rem .5rem;border-radius:999px;white-space:nowrap}
+.anchor .a-tag.strong{color:var(--ok);background:var(--ok-dim)}
+.anchor .a-tag.adequate{color:var(--text-secondary);background:var(--surface-raised)}
+.anchor .a-tag.concern{color:var(--warn);background:var(--warn-dim)}
+.anchor .a-desc{color:var(--text-secondary)}
+
+.dna{padding:.4rem 0}
+.dna .d-item{display:flex;gap:.6rem;font-size:var(--text-sm);color:var(--text-secondary);padding:.25rem 0;align-items:baseline}
+.dna .d-item::before{content:"✕";color:var(--alert);font-family:var(--font-mono);font-size:var(--text-xs);flex:none}
+
+.err{border:1px solid var(--alert);border-radius:var(--radius-sm);background:var(--alert-dim);
+  font-size:var(--text-sm);padding:.8rem 1rem;margin:1rem 0;display:none}
+.raw{white-space:pre-wrap;font-size:var(--text-sm);color:var(--text-secondary);
+  border:var(--tl-hairline);border-radius:var(--radius-md);padding:1.2rem;margin-top:1rem;display:none}
+.skeleton{display:none;padding:1.5rem 0}
+.skeleton .sk{height:5rem;border:var(--tl-hairline);border-radius:var(--radius-md);
+  background:linear-gradient(100deg,var(--surface) 40%,var(--surface-raised) 50%,var(--surface) 60%);
+  background-size:200% 100%;animation:sk 1.4s ease infinite;margin-bottom:.7rem}
+@keyframes sk{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.skeleton .sk{animation:none}}
+.footer{border-top:1px solid var(--border);padding:2rem;display:flex;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;font-size:var(--text-sm);color:var(--text-tertiary)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">Catalyst<em>-DNA</em></div>
+  <a class="back" href="/demos/">← All demos</a>
+</nav>
+
+<header class="head">
+  <div class="wrap">
+    <div class="eyebrow">CHRO · Live demo</div>
+    <h1>Interview Kit — the structured interviewer cockpit</h1>
+    <p class="sub">Name a role and level, get the kit: competency-mapped questions with what a strong answer sounds like, a skills matrix, a work sample, anchored scoring guidance — and a do-not-ask list. It never screens or ranks candidates. That boundary is the design.</p>
+    <div class="badge"><span class="dot"></span>Live · no candidate data, by design</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="controls">
+    <input id="role" type="text" placeholder="Role (e.g. Commercial Credit Analyst)" maxlength="120" autocomplete="off">
+    <select id="level">
+      <option value="early-career">Early career</option>
+      <option value="experienced" selected>Experienced</option>
+      <option value="leadership">Leadership</option>
+    </select>
+    <button class="btn" id="run">Build the kit</button>
+  </div>
+  <div class="note">This surface accepts a role and level — nothing else. There is no field for a resume or a candidate anywhere on this page.</div>
+
+  <div class="err" id="err"></div>
+  <div class="skeleton" id="skel"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+
+  <section class="cockpit" id="cockpit" aria-live="polite">
+    <div id="framing"></div>
+    <div id="comps"></div>
+    <div class="band"><h2>Skills matrix · probe each directly</h2><div id="skills"></div></div>
+    <div class="band"><h2>Work sample</h2><div class="sample" id="sample"></div></div>
+    <div class="band"><h2>Scoring anchors · strong / adequate / concern</h2><div id="anchors"></div></div>
+    <div class="band"><h2>Do not ask</h2><div class="dna" id="dna"></div></div>
+
+    <!-- the CHRO ruling, rendered: the resume assessment is described, never exposed -->
+    <div class="tl-engage tl-engage--block" role="note" id="described"></div>
+
+    <div class="tl-gate" data-state="draft">
+      <span class="tl-gate-state">Draft</span>
+      <span class="tl-gate-holder">Hiring decisions rest with humans — this kit structures the conversation, nothing more</span>
+    </div>
+  </section>
+
+  <pre class="raw" id="raw"></pre>
+</main>
+
+<footer class="footer">
+  <span>© 2026 Catalyst-DNA LLC</span>
+  <span>Live demo · accepts a role and level only</span>
+</footer>
+
+<script>
+const WORKER_BASE = "https://REPLACE-ME.workers.dev";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function renderCockpit(p){
+  $("framing").innerHTML = `
+    <div class="framing">
+      <span class="fr-role">${esc(p.role)}</span><span class="fr-level">${esc(p.level)}</span>
+      <div class="fr-text">${esc(p.framing)}</div>
+    </div>`;
+
+  $("comps").innerHTML = (p.competencies || []).map(c => `
+    <div class="comp">
+      <h2>${esc(c.name)}</h2>
+      ${(c.questions || []).map(q => `
+        <div class="q">
+          <div class="q-text">${esc(q.q)}</div>
+          <div class="q-strong">${esc(q.strongAnswer)}</div>
+        </div>`).join("")}
+    </div>`).join("");
+
+  $("skills").innerHTML = (p.skillsMatrix || []).map(s => `
+    <div class="skill">
+      <span class="s-name">${esc(s.skill)}</span>
+      <span class="s-probe">${esc(s.probe)}</span>
+    </div>`).join("");
+
+  $("sample").innerHTML = `${esc(p.workSample?.exercise)}
+    <span class="sa-time">${esc(p.workSample?.timeBudget)}</span>`;
+
+  $("anchors").innerHTML = (p.anchors || []).map(a => `
+    <div class="anchor">
+      <div class="a-comp">${esc(a.competency)}</div>
+      <div class="a-row"><span class="a-tag strong">strong</span><span class="a-desc">${esc(a.strong)}</span></div>
+      <div class="a-row"><span class="a-tag adequate">adequate</span><span class="a-desc">${esc(a.adequate)}</span></div>
+      <div class="a-row"><span class="a-tag concern">concern</span><span class="a-desc">${esc(a.concern)}</span></div>
+    </div>`).join("");
+
+  $("dna").innerHTML = (p.doNotAsk || []).map(d => `<div class="d-item">${esc(d)}</div>`).join("");
+
+  /* the ruling rendered: described capability inside the engagement block */
+  const dc = p.describedCapability || {};
+  $("described").innerHTML = `
+    <span class="tl-engage-tag">requires bank data · engagement mode</span>
+    <span class="tl-engage-title">${esc(dc.name)}</span>
+    <span class="tl-engage-check">${esc(dc.description)}</span>
+    <span class="tl-engage-boundary">${esc(dc.boundary)}</span>`;
+
+  $("cockpit").classList.add("on");
+}
+
+$("run").addEventListener("click", async () => {
+  const role = $("role").value.trim();
+  $("err").style.display="none"; $("raw").style.display="none"; $("cockpit").classList.remove("on");
+  if(role.length < 3){ $("err").textContent = "Name the role."; $("err").style.display="block"; return; }
+  $("run").disabled = true; $("skel").style.display = "block";
+  try{
+    const res = await fetch(WORKER_BASE + "/interviewkit", {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ role, level: $("level").value })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || "Agent unavailable — try again in a minute.");
+    if(data.envelope && data.payload){ renderCockpit(data.payload); }
+    else if(data.output){ $("raw").textContent = data.output; $("raw").style.display = "block"; }
+    else { throw new Error("Unexpected response shape."); }
+  } catch(e){ $("err").textContent = e.message; $("err").style.display = "block"; }
+  finally { $("run").disabled = false; $("skel").style.display = "none"; }
+});
+</script>
+</body>
+</html>

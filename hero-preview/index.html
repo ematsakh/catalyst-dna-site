@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catalyst-DNA — We close the gap between AI potential and production</title>
+<meta name="description" content="Operator-led AI strategy and delivery for community and regional banks. We design, build, and run production AI systems — on infrastructure you own.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============ CATALYST-DNA TOKENS · dark register ============ */
+:root{
+  --bg-primary:#09090B; --surface:#18181B; --surface-raised:#1F1F24;
+  --border:#27272A; --border-active:#33415C;
+  --text-primary:#FAFAFA; --text-secondary:#A1A1AA; --text-tertiary:#6F6F78;
+  --accent:#2E71E5; --accent-bright:#6FA2F5;
+  --accent-glow:rgba(46,113,229,.32); --accent-wash:rgba(46,113,229,.08);
+  --viz-challenger:#2E71E5; --viz-incumbent:#8B93A3; --viz-highlight:#4CC3E8;
+  --font-display:"Outfit",system-ui,sans-serif;
+  --font-body:"DM Sans",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1.0625rem;
+  --text-lg:1.25rem; --text-xl:1.625rem; --text-2xl:2.25rem;
+  --text-hero:clamp(2.6rem,5.5vw,4.25rem);
+  --duration-fast:150ms; --duration-base:240ms; --duration-slow:400ms;
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --radius-sm:6px; --radius-md:10px;
+  --content-max:72rem; --prose-max:42rem;
+  --tracking-eyebrow:.14em;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg-primary); color:var(--text-primary);
+  font-family:var(--font-body); font-size:var(--text-base); line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent-bright);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ============ NAV (minimal shell for the prototype) ============ */
+.nav{
+  position:fixed; inset:0 0 auto 0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:1.1rem 2rem; backdrop-filter:blur(12px);
+  background:rgba(9,9,11,.72); border-bottom:1px solid var(--border);
+}
+.nav .brand{font-family:var(--font-display);font-weight:600;font-size:1.05rem;color:var(--text-primary);letter-spacing:.01em}
+.nav .brand em{font-style:normal;color:var(--accent-bright)}
+.nav .links{display:flex;gap:1.75rem;font-size:var(--text-sm);color:var(--text-secondary)}
+.nav .links a{color:var(--text-secondary);transition:color var(--duration-fast) var(--ease-out)}
+.nav .links a:hover{color:var(--text-primary)}
+@media(max-width:720px){.nav .links{display:none}}
+
+/* ============ HERO ============ */
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden}
+#viz{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero-fade{ /* keeps text legible over the field without killing the viz */
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(9,9,11,.92) 0%,rgba(9,9,11,.55) 44%,rgba(9,9,11,.05) 75%);
+}
+@media(max-width:900px){.hero-fade{background:linear-gradient(180deg,rgba(9,9,11,.55) 0%,rgba(9,9,11,.88) 70%)}}
+.hero-inner{
+  position:relative;z-index:2;width:100%;max-width:var(--content-max);
+  margin:0 auto;padding:7rem 2rem 5rem;
+}
+.hero-copy{max-width:38rem}
+.eyebrow{
+  font-family:var(--font-mono);font-size:var(--text-xs);font-weight:500;
+  letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--accent-bright);
+}
+.hero h1{
+  font-family:var(--font-display);font-weight:700;font-size:var(--text-hero);
+  line-height:1.08;letter-spacing:-.015em;margin:1.1rem 0 1.3rem;
+}
+.hero h1 .u{color:var(--accent-bright)}
+.hero .sub{color:var(--text-secondary);font-size:var(--text-lg);line-height:1.55;max-width:34rem}
+.cta-row{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:2.1rem}
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-family:var(--font-body);font-weight:500;font-size:var(--text-sm);
+  padding:.8rem 1.4rem;border-radius:var(--radius-sm);
+  transition:box-shadow var(--duration-fast) var(--ease-out),
+             transform var(--duration-fast) var(--ease-out),
+             border-color var(--duration-fast) var(--ease-out);
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{box-shadow:0 0 24px var(--accent-glow);transform:translateY(-1px)}
+.btn-ghost{border:1px solid var(--border);color:var(--text-primary);background:transparent}
+.btn-ghost:hover{border-color:var(--border-active)}
+.viz-caption{
+  position:absolute;right:2rem;bottom:1.6rem;z-index:2;
+  font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;
+  color:var(--text-tertiary);text-transform:uppercase;text-align:right;line-height:1.9;
+}
+.viz-caption b{color:var(--text-secondary);font-weight:500}
+.viz-caption .n{color:var(--accent-bright)}
+.viz-tip{
+  position:absolute;z-index:3;pointer-events:none;opacity:0;
+  font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-primary);
+  background:var(--surface-raised);border:1px solid var(--border-active);
+  border-radius:var(--radius-sm);padding:.3rem .55rem;white-space:nowrap;
+  transform:translate(-50%,-160%);transition:opacity var(--duration-fast) var(--ease-out);
+}
+.viz-tip.on{opacity:1}
+@media(max-width:900px){.viz-caption{left:2rem;right:auto;text-align:left}}
+
+/* ============ PIPELINE · Strategy → Build → Run ============ */
+.pipeline{border-top:1px solid var(--border);background:var(--bg-primary)}
+.pipeline-inner{max-width:var(--content-max);margin:0 auto;padding:4.5rem 2rem}
+.stages{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:start;margin-top:2.6rem}
+.stage{padding:0 .25rem}
+.stage .tag{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--tracking-eyebrow);color:var(--accent-bright);text-transform:uppercase}
+.stage h3{font-family:var(--font-display);font-weight:600;font-size:var(--text-xl);margin:.55rem 0 .5rem}
+.stage p{color:var(--text-secondary);font-size:var(--text-sm);line-height:1.6;max-width:17rem}
+.stage .svc{margin-top:.9rem;font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-tertiary);line-height:2}
+.conn{position:relative;width:5.5rem;height:2px;background:var(--border);margin-top:2.9rem}
+.conn::after{
+  content:"";position:absolute;top:-2px;left:0;width:6px;height:6px;border-radius:50%;
+  background:var(--accent-bright);box-shadow:0 0 8px var(--accent-glow);
+  animation:packet 2.8s var(--ease-out) infinite;
+}
+.conn.c2::after{animation-delay:1.4s}
+@keyframes packet{0%{left:0;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:calc(100% - 6px);opacity:0}}
+@media(max-width:900px){
+  .stages{grid-template-columns:1fr}
+  .conn{width:2px;height:3rem;margin:1.1rem 0 1.1rem .35rem}
+  .conn::after{animation:packetV 2.8s var(--ease-out) infinite}
+  @keyframes packetV{0%{top:0;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:calc(100% - 6px);opacity:0}}
+}
+
+/* ============ SECTION SHELL + SAMPLE SERVICE CARDS ============ */
+.section-head .eyebrow{color:var(--accent)}
+.section-head h2{font-family:var(--font-display);font-weight:600;font-size:var(--text-2xl);margin:.7rem 0 .6rem;letter-spacing:-.01em}
+.section-head p{color:var(--text-secondary);max-width:var(--prose-max)}
+.cards{max-width:var(--content-max);margin:0 auto;padding:4.5rem 2rem 6rem}
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2.4rem}
+@media(max-width:900px){.card-grid{grid-template-columns:1fr}}
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:1.6rem 1.5rem;
+  transition:border-color var(--duration-fast) var(--ease-out),background var(--duration-fast) var(--ease-out);
+}
+.card:hover{border-color:var(--border-active);background:var(--surface-raised)}
+.card .glyph{font-family:var(--font-mono);color:var(--accent-bright);font-size:1rem}
+.card h3{font-family:var(--font-display);font-weight:600;font-size:var(--text-lg);margin:.8rem 0 .5rem}
+.card p{color:var(--text-secondary);font-size:var(--text-sm);line-height:1.6}
+
+/* ============ MOTION PRIMITIVES ============ */
+.reveal{opacity:0;transform:translateY(24px);
+  transition:opacity var(--duration-slow) var(--ease-out),transform var(--duration-slow) var(--ease-out)}
+.reveal.in-view{opacity:1;transform:none}
+.reveal.d1{transition-delay:70ms}.reveal.d2{transition-delay:140ms}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  .reveal{opacity:1;transform:none}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">Catalyst<em>-DNA</em></div>
+  <div class="links">
+    <a href="#services">Services</a><a href="#">Data Products</a><a href="#">Insights</a><a href="#">About</a>
+  </div>
+  <a class="btn btn-primary" href="#" style="padding:.55rem 1rem">Book a working session</a>
+</nav>
+
+<header class="hero">
+  <canvas id="viz" aria-hidden="true"></canvas>
+  <div class="hero-fade"></div>
+  <div class="viz-tip" id="tip"></div>
+
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow">AI Strategy · Build · Run — for community &amp; regional banks</div>
+      <h1>We close the gap between AI <span class="u">potential</span> and <span class="u">production</span>.</h1>
+      <p class="sub">Catalyst-DNA is an operator-led AI firm. We design, build, and run production AI systems for community and regional banks — on infrastructure you own, delivered in weeks.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#">Book a working session</a>
+        <a class="btn btn-ghost" href="#">Explore the FinAI 1000 →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="viz-caption">
+    <b>FinAI 1000 · live dataset</b><br>
+    <span class="n" id="counter">0</span> companies mapped · <span class="n">943</span> challengers · <span class="n">77</span> incumbents
+  </div>
+</header>
+
+<section class="pipeline" id="services">
+  <div class="pipeline-inner">
+    <div class="section-head reveal">
+      <div class="eyebrow">How we work</div>
+      <h2>Strategy → Build → Run. One system.</h2>
+      <p>Every engagement produces something that runs in production — not observations. Five services across three stages, each with a defined artifact and a defined owner: us.</p>
+    </div>
+    <div class="stages">
+      <div class="stage reveal">
+        <div class="tag">01 · Strategy</div>
+        <h3>Decide what's worth building</h3>
+        <p>Target operating model, prioritized use cases with value mapping, reference architecture, 90-day plan.</p>
+        <div class="svc">DNA BLUEPRINT</div>
+      </div>
+      <div class="conn" aria-hidden="true"></div>
+      <div class="stage reveal d1">
+        <div class="tag">02 · Build</div>
+        <h3>Ship it to production</h3>
+        <p>Agentic workflows deployed, the data foundation under them, and predictive models with evaluation built in.</p>
+        <div class="svc">AI WORKFLOW DEPLOYMENT<br>DATA FOUNDATION SPRINT<br>ANALYTICS PROGRAMME</div>
+      </div>
+      <div class="conn c2" aria-hidden="true"></div>
+      <div class="stage reveal d2">
+        <div class="tag">03 · Run</div>
+        <h3>Keep it running</h3>
+        <p>Managed run-state on retainer: SLOs, model monitoring, data quality SLAs, cost control, quarterly roadmap.</p>
+        <div class="svc">DNA OPS</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cards">
+  <div class="section-head reveal">
+    <div class="eyebrow">Motion system reference</div>
+    <h2>Card, reveal, and hover primitives</h2>
+    <p>Sample cards demonstrating the site-wide interaction grammar: 150ms border-tint hovers, single fade-up reveals, no loops outside the hero.</p>
+  </div>
+  <div class="card-grid">
+    <div class="card reveal"><div class="glyph">△</div><h3>AI Workflow Deployment</h3><p>Production-grade agentic AI systems for regulated environments — from use-case selection through build, deployment, monitoring, and governance.</p></div>
+    <div class="card reveal d1"><div class="glyph">◈</div><h3>DNA Blueprint</h3><p>A 2–4 week strategy and vendor assessment engagement: operating model, prioritized use cases, reference architecture, investment logic.</p></div>
+    <div class="card reveal d2"><div class="glyph">◇</div><h3>Data Foundation Sprint</h3><p>The analytical data layer your AI needs, built in 6–10 weeks — landing zone, data products, governance-as-code, RAG-ready access.</p></div>
+  </div>
+</section>
+
+<script>
+/* ================= FINAI 1000 HERO FIELD =================
+   Real data: [name, clusterIndex 0-5, tier 0=challenger 1=incumbent]
+   Challengers = accent blue (the story). Incumbents = slate (recede).
+   Load: 2.4s scatter→cluster resolve. Then ambient drift.
+   Pointer: gentle repulsion + nearest-node name chip.
+   Reduced motion: final state drawn once, counter static.       */
+const NODES = [["Norm AI",0,0],["Sardine",4,0],["Unit21",0,0],["Bretton AI (Greenlite)",0,0],["ComplyAdvantage",0,0],["Hawk AI",0,1],["4CRisk",0,0],["Oscilar",0,0],["Refine Intelligence",4,0],["FiVerity",4,0],["ThetaRay",0,0],["Socure",4,0],["Persona",4,0],["SentiLink",4,0],["Alloy",4,0],["Jumio",4,1],["Onfido",4,1],["Veriff",4,0],["iDenfy",4,0],["IDnow",4,0],["ID.me",4,0],["Sumsub",4,0],["Ondato",4,0],["Fourthline",4,0],["Forter",4,0],["Sift",4,0],["GBG",4,0],["Vouched",4,0],["Fideo",4,0],["Neuro-ID",4,0],["Resistant AI",4,0],["Lynx Tech",4,0],["Carefull",4,0],["Zest AI",1,0],["Scienaptic AI",1,0],["Casca",1,0],["EnFi",1,0],["Carrington Labs",1,0],["Lama AI",1,0],["Ocrolus",1,0],["Numerated",1,0],["Pagaya",1,0],["Built Technologies",1,0],["Blooma",1,0],["Aven",1,0],["Peach Finance",5,0],["GDS Link",1,1],["LendFoundry",5,0],["DigiFi",1,0],["OatFi",1,0],["Mintos",3,0],["Uptiq AI",1,0],["Harvey",0,0],["Rogo",3,0],["Hebbia",1,0],["Brightwave",3,0],["Finster AI",3,0],["Arkifi",3,0],["Wokelo AI",3,0],["Finpilot",3,0],["BlueFlame AI",3,0],["DiligentIQ (ToltIQ)",3,0],["Legora",0,0],["Ivo",0,0],["Addepar",3,1],["Finny AI",5,0],["Interface.ai",3,0],["Posh AI",3,0],["Glia",3,1],["Agent IQ",3,0],["LivePerson",5,0],["Hapax AI",5,0],["Kasasa",5,0],["WaveCX",5,0],["Larky",5,0],["Ushur",5,0],["TaskUs",5,0],["Glean",1,0],["Alkymi",1,0],["Inscribe.ai",1,0],["Veryfi",1,0],["Staple AI",1,0],["DocFox",1,0],["Monte Carlo",1,0],["AppZen",4,0],["HighRadius",2,1],["Trovata",2,0],["Kognitos",5,0],["Multimodal",5,0],["WorkFusion",0,0],["UiPath",5,0],["PandaDoc",1,0],["Saphyre",1,0],["nCino",3,1],["Blend",3,1],["Alkami",3,1],["Candescent",3,0],["Apiture",3,0],["Narmi",3,1],["MANTL",1,0],["Nymbus",3,0],["Savana",3,0],["Abrigo",0,0],["Amount",1,0],["ModernFi",2,0],["MX",1,0],["Pinwheel",1,0],["Synctera",3,0],["Cable",0,0],["NayaOne",3,0],["PortX",3,0],["FintechOS",3,0],["Fenergo",1,0],["Dataseers",1,0],["Adyen",2,1],["Marqeta",2,1],["Ramp",4,1],["Remitly",2,0],["MoonPay",2,0],["Moov",2,0],["Orum",2,0],["OpenPayd",2,0],["Conduit",2,0],["Aeropay",2,0],["Knot",2,0],["Zum Rails",2,0],["Runa",2,0],["Giift",2,0],["Wildfire Systems",2,0],["Kudos",2,0],["Cardlytics",5,0],["Atomic",1,0],["Column",3,0],["Clutch",1,0],["Greenlight",2,0],["Capitalize",3,0],["Drata",0,0],["LogicGate",0,0],["Hyperproof",0,0],["SRA Watchtower (Lumio)",0,0],["Azimuth GRC",0,0],["Hummingbird",0,0],["GenGuardX",0,0],["Pontus",5,0],["Trust & Will",0,0],["PayHOA",4,0],["Worth AI",4,0],["Baselayer",4,0],["Middesk",4,0],["ValidiFI",4,0],["Footprint",4,0],["Taktile",0,0],["Airbase",4,0],["Bond.ai",5,0],["Bricklayer.ai",0,0],["Catena Labs",3,0],["Creatio",5,0],["Enable",4,0],["Ethos",0,0],["Glide",5,0],["Griffin",3,0],["Haize Labs",0,0],["Infiant",5,0],["Judi.ai",1,0],["Lumin Digital",3,1],["Mako",3,0],["Meniga",3,0],["Mosaic",4,0],["Sequence",3,0],["Shiboleth",1,0],["Synerise",5,0],["WireMock",3,0],["AlphaSense",3,1],["Sierra",5,0],["Decagon",5,0],["Daloopa",1,0],["Salient",5,0],["Basis",4,0],["Black Ore",4,0],["Sedric AI",0,0],["Greenboard",0,0],["Parlay",1,0],["ROE AI",0,0],["Warrant",0,0],["Reality Defender",0,0],["Finic",4,0],["Rulebase",4,0],["Scamnetic",4,0],["Charm Security",4,0],["Anonybit",4,0],["Quavo Fraud & Disputes",4,0],["1Kosmos",4,0],["Lendbuzz",1,0],["Parafin",1,0],["Gynger",1,0],["Rove",2,0],["Corefin",5,0],["Underwrite.ai",0,0],["Datalign Advisory",3,0],["TIFIN",3,0],["Zocks",3,0],["Zeplyn",3,0],["Jump",3,0],["Era",3,0],["WNSTN AI",3,0],["VectorShift",3,0],["Advisor360",3,0],["AIidentified",5,0],["Numeric",4,0],["Digits",4,0],["Zeni",4,0],["Docyt",4,0],["Warp",4,0],["TaxGPT",4,0],["Adaptive",4,0],["Pilot",4,0],["Botkeeper",4,0],["DualEntry",4,0],["FloQast",4,0],["Trullion",4,0],["Vic.ai",2,0],["Statement",2,0],["Nilus",2,0],["Daylit",2,0],["Eloquent AI",5,0],["SafetyKit",5,0],["Ballerine",2,0],["Clarista",1,0],["Chimney",5,0],["CollaborationRoom.ai",5,0],["Debbie",3,0],["Lyzr AI",5,0],["EliseAI",5,0],["Blue Street Data",1,0],["Hansa",1,0],["Crowded",3,0],["Notch",0,0],["Carpe Data",4,0],["ClosingLock",4,0],["GetReal Security",4,0],["PayJoy",1,0],["Kikoff",1,0],["Payman",2,0],["Agree",0,0],["Clarum",1,0],["Parsewise",1,0],["Juno",4,0],["FlowX.AI",5,0],["Ogment AI",3,0],["Alix",5,0],["H2O.ai",0,0],["Writer",5,0],["Galileo",0,1],["Poolside",3,0],["Anaconda",1,0],["ClickHouse",3,0],["Lakera",0,0],["Prophet Security",0,0],["Flagright",0,0],["Lucinity",0,0],["Napier AI",0,1],["IMTF",0,0],["Kharon",0,0],["MCO (MyComplianceOffice)",0,0],["StarCompliance",0,0],["Velocity FinCrime Solutions Suite",0,0],["ACA Group",0,0],["Symphony",0,0],["Luware Recording",0,0],["Amlyze",0,0],["Hadrius",0,0],["ForwardLane",4,0],["HyperVerge",4,0],["Signzy",4,0],["FacePhi",4,0],["Upstart",1,1],["Enova",1,0],["Arya.ai",1,0],["FinBox",1,0],["CrediLinq",1,0],["CredibleX",1,0],["Banxware",1,0],["InDebted",5,0],["Murphy",5,0],["Nada",3,0],["Supermoney",1,0],["Abound",1,0],["Creditas",1,0],["Addi",1,0],["Konfío",1,0],["Cleo",1,0],["Alpaca",3,0],["Dub",0,0],["BridgeWise",0,0],["Neurons Lab",3,0],["Flanks",3,0],["CoPilot AI",3,0],["PureFacts",3,0],["Conquest Planning",3,0],["Thyme",3,0],["Powder",3,0],["Toggle AI",3,0],["OneAdvisory",3,0],["Farther",3,0],["Savvy Wealth",3,0],["Zoe Financial",3,0],["RavenPack / Bigdata.com",3,0],["AgentSmyth",3,0],["Auquan",1,0],["9fin",1,0],["Terminal X",3,0],["Generative Alpha",3,0],["Hudson Labs",3,0],["Calcbench",1,0],["Vantager",3,0],["Cognitive Credit",1,0],["F2 AI",5,0],["Edge Hound",3,0],["Upstage",1,0],["Claira",1,0],["FileAI",1,0],["Datricks",0,0],["Decimal Point Analytics",1,0],["OnFinance AI",0,0],["Bluecopa",4,0],["Campfire",4,0],["Xelix",4,0],["Abacum",4,0],["Mendel",4,0],["Rillet",4,0],["Outmin",4,0],["Tabs",2,0],["Omie",5,0],["Kamino",2,0],["HuLoop Automation",5,0],["Oversight Systems",4,0],["Finmo",2,0],["Bolto",2,0],["BVNK",2,0],["Rain",2,0],["Noah",0,0],["Transak",0,0],["RedotPay",2,0],["Baanx",2,0],["Yuno",2,0],["Payrails",2,0],["PayTic",2,0],["Tazapay",2,0],["Enza",2,0],["BKN301",2,0],["NymCard",2,0],["Akua",2,0],["Toku",0,0],["Thought Machine",3,1],["FISPAN",4,0],["Fimple",3,0],["Finom",4,0],["Agora",3,0],["Dock",4,0],["CloudWalk",1,0],["Gradient Labs",4,0],["Borderless",2,0],["Niural",2,0],["Jet HR",2,0],["SeamlessHR",2,0],["Khazna",2,0],["InstaPay",2,0],["Every",2,0],["Utila",2,0],["Komainu",0,0],["DigiFT",3,0],["RD Technologies",2,0],["Securitize",3,0],["Crossmint",2,0],["Maple Finance",1,0],["Cryptio",0,0],["Relai",3,0],["Breez",2,0],["Darktrace",2,0],["Cowbell Cyber",1,0],["KYND",0,0],["Fiddler AI",3,0],["Arize AI",3,0],["Langfuse",3,0],["LangWatch",3,0],["Helicone",3,0],["Confident AI / DeepEval",3,0],["Braintrust",3,0],["TrueFoundry",3,0],["Promptfoo",0,0],["LangChain / LangSmith",3,0],["Tines",0,0],["Moderne",5,0],["Federato",1,0],["Sixfold AI",1,0],["Mea Platform",1,0],["FieldGuide",3,0],["Scalabl AI",4,0],["Affinity Africa",3,0],["Unique",5,0],["Further AI",0,0],["Axyon AI",3,0],["Arctic Intelligence",0,0],["Ascent",0,0],["Consilient",0,0],["Corlytics",0,1],["Comply Exchange",0,0],["Quantexa",0,0],["Quantifind",0,0],["RelyComply",0,0],["Red Oak Compliance",0,0],["Regnology",0,0],["Saifr",0,0],["Smarsh",0,0],["Silent Eight",0,0],["Taina Technology",0,0],["Theta Lake",0,0],["Tookitaki",0,0],["Mozn",0,0],["Vneuron",0,0],["Muinmos",1,0],["CoComply",0,0],["AuthenticID",4,0],["Clari5",0,0],["EverC",2,0],["Microblink",4,0],["Photocert",4,0],["Ravelin",4,0],["Rippleshot",4,0],["SEON",4,0],["Tech5",4,0],["Trulioo",1,0],["Quantum Integrity",4,0],["Defacto",1,0],["IceKredit",1,0],["Nuvo",1,0],["PostEx",1,0],["Slope",1,0],["Tavant",5,0],["Think360",1,0],["WonderLend Hubs",3,0],["Arabesque AI",3,0],["Arta Finance",1,0],["Boosted.ai",3,0],["Candidly",1,0],["Desia",3,0],["Fincite",3,0],["Grifin",3,0],["InvestorAi",3,0],["Kidbrooke",3,0],["Lightyear",3,0],["Lumenai Investments",3,0],["MDOTM",3,0],["Numerai",3,0],["Privé Technologies",3,0],["Raise Partner",3,0],["Retirable",3,0],["Skarlett",1,0],["STRATxAI",3,0],["Thndr",3,0],["Univeris",3,0],["Verano AI",3,0],["WealthArc",3,0],["APEX E3",1,0],["Arteria AI",1,0],["Bud Financial",1,0],["Context Analytics",3,0],["Eigen Technologies",1,0],["Expert.ai",0,0],["Fifth Dimension",3,0],["K1x",4,0],["KX",3,0],["M-Files",1,0],["Novidea",0,0],["Percipience",1,0],["PriceHubble",3,0],["Secoda",1,0],["Squirro",1,0],["Versana",3,0],["73 Strings",3,0],["AInnovation",5,0],["Akaike",5,0],["Justt",2,0],["Obsidian",5,0],["Reserv",0,0],["Symfa",5,0],["Viktor",5,0],["Akur8",0,0],["Almis",0,0],["Calvin Risk",0,0],["Delos Insurance Solutions",1,0],["Descartes Underwriting",0,0],["Earnix",0,0],["Eoliann",0,0],["Geordie AI",0,0],["Harmoney",0,0],["Inca",1,0],["Kalepa",1,0],["Prometeia",0,0],["Quantee",0,0],["Transparently AI",0,0],["Bairong (Yunchuang)",0,0],["ValidMind",0,0],["Aspora",0,0],["Ascend",2,0],["Cino",2,0],["Due",2,0],["Easebuzz",2,0],["Haball",1,0],["Primer",2,0],["Yaspa",2,0],["Ziina",2,0],["A-Cube",2,0],["Adfin",2,0],["Clockwork",4,0],["DDD Invoices",2,0],["Emagia",2,0],["Fonoa",2,0],["Orb",2,0],["Pivot",4,0],["Sievo",4,0],["Zip",4,0],["Canopy",4,0],["Compass AI",4,0],["Fyle",4,0],["Kick",4,0],["MindBridge",4,0],["Pennylane",4,0],["Profluo",4,0],["Intellect Design",3,0],["OpenTrade",3,0],["Pismo",3,1],["Prelude",1,0],["Aisera",5,0],["Coinscrap Finance",5,0],["Dimply",3,0],["FCB.ai",5,0],["OvationCXM",5,0],["Rasa",5,0],["Wiz.AI",5,0],["PAIR Finance",5,0],["Blue J",0,0],["Highnote",2,0],["Mal",3,0],["Adversa AI",0,0],["Duality Technologies",0,0],["Sonet.io",0,0],["ARQA",3,0],["Companjon",0,0],["QantEv",0,0],["Quandri",3,0],["Shift Technology",4,0],["Synthex",3,0],["Seapoint",4,0],["Tractable",0,1],["AiBee",1,0],["Clara",4,0],["DataRobot",3,0],["Dataiku",3,0],["Domino Data Lab",3,0],["Abnormal Security",0,0],["Weights & Biases",3,0],["Pinecone",3,0],["Tecton",3,0],["SentinelOne",0,0],["Plaid",1,1],["Brex",4,1],["Affirm",1,0],["BILL",2,1],["Modern Treasury",2,0],["Mercury",3,0],["Chime",3,0],["SoFi",1,0],["Castellum.AI",0,0],["Wealth.com",3,0],["Samaya AI",3,0],["Spade",4,0],["Casap",4,0],["AIUC",0,0],["Scalata",1,0],["Behavox",0,1],["MyComplianceOffice",0,0],["AnChain.AI",0,0],["Fravity",0,0],["Socratix AI",0,0],["ContexQ",0,0],["DataVisor",0,0],["Complyance",0,0],["ID-Pal",4,0],["Darwinium",4,0],["Elephant",4,0],["Sequretek",0,0],["Illuma",4,0],["QuickFi",1,0],["Kita",1,0],["GiniMachine",1,0],["Yubi",1,0],["Jelou",1,0],["Zippi",1,0],["Mifundo",1,0],["Monkey Tech",1,0],["January",5,0],["additiv",3,0],["Nextvestment",3,0],["uncharted group",3,0],["Magnifi",3,0],["Model ML",3,0],["Farsight",3,0],["Grasp",3,0],["Fintool",3,0],["stockinsights.ai",3,0],["DiligenceSquared",3,0],["Truewind",4,0],["Haven",4,0],["Bookkeeping.ai",4,0],["Transformance",2,0],["Zenskar",4,0],["ChatFin",2,0],["Lucid Financials",4,0],["Maisa",5,0],["Sea.dev",5,0],["Zengines",3,0],["Cobalt",3,0],["Eisen",5,0],["Neuralk-AI",3,0],["ebankIT",3,0],["Finalytics.ai",5,0],["BankUniverse",5,0],["Intention.ly",5,0],["MyPocketSkill",3,0],["Sprout.ai",0,0],["Pibit AI",0,0],["Gradient AI",0,0],["Anzen",0,0],["Avantos",0,0],["Floatbot",5,0],["Dograh AI",5,0],["Lorikeet",5,0],["Checkbox",0,0],["AIO",1,0],["AiPrise",4,0],["Aveni",0,0],["Blee",0,0],["bolttech",0,0],["CUBE",0,0],["Dacadoo",0,0],["Equifax",1,1],["EXANTE",3,0],["Fenris",0,0],["Finastra",3,1],["Gentek",0,0],["Hexaview Technologies",3,0],["Insurity",0,0],["LSEG Risk Intelligence",0,0],["Majesco",0,0],["ManageMy",0,0],["Manetu",0,0],["Nexus FrontierTech",1,0],["Producerflow",0,0],["Quantiphi",5,0],["Quensus",0,0],["RiskSmart",0,0],["Shield",0,0],["Sparkling Logic",5,0],["Stratyfy",1,0],["Tieto",3,0],["Transient.AI",3,0],["UnlikelyAI",5,0],["UpSlide",1,0],["Vivox AI",0,0],["WealthBlock",3,0],["Zeidler Group",0,0],["Accend",1,0],["Copperlane",1,0],["Veritus",5,0],["Navanc",1,0],["Recur Club",1,0],["Finfactor",1,0],["Timble",1,0],["Palenca",1,0],["Kapital",1,0],["erad",1,0],["Periculum",1,0],["Lendsqr",1,0],["Branch International",1,0],["M-KOPA",1,0],["JUMO",1,0],["Optasia",1,0],["SAPI",1,0],["Sigma360",0,0],["Onshore",0,0],["Drona Pay",0,0],["Tutelar",0,0],["Smile ID",4,0],["Castle",4,0],["TartanHQ",4,0],["Harper",0,0],["Fulcrum",0,0],["Equal Parts",0,0],["WithCoverage",0,0],["Fernstone",0,0],["Acolite",0,0],["AppliedAI",0,0],["Mitigata",0,0],["Bayesline",3,0],["Paasa",3,0],["Gridline",3,0],["Deckmatch",3,0],["Auditoria.AI",4,0],["Numeral",0,0],["AutomationEdge",5,0],["Basware",2,0],["Asteria AI",4,0],["Apron",2,0],["Fyno",5,0],["Alaan",2,0],["SoftBees",3,0],["PrimeVault",3,0],["DeepIP",0,0],["Sava",3,0],["Duco",4,0],["Octaura",4,0],["FINBOURNE",4,0],["Aiera",4,0],["Kensho",4,1],["Ondo Finance",4,0],["Canoe Intelligence",4,0],["Accelex",4,0],["Tesorio",2,0],["Atlar",2,0],["Glean.ai",2,0],["Kyriba",2,1],["Cledara",2,0],["Light",2,0],["Rillion",2,0],["Medius",2,0],["Gaviti",2,0],["Paraglide",2,0],["Tuum",3,0],["10x Banking",3,1],["Zafin",3,1],["Backbase",3,1],["Treasury Prime",3,0],["Formance",3,0],["Fragment",3,0],["One Zero",3,0],["Yields.io",0,0],["Monitaur",0,0],["Citrusx",0,0],["ModelOp",0,0],["Holistic AI",0,0],["Fairly AI",0,0],["Credo AI",0,0],["WhyLabs",0,0],["Five Sigma",4,0],["EvolutionIQ",4,1],["CLARA Analytics",4,0],["Liberate Innovations",4,0],["Avallon Labs",4,0],["Adaptional",4,0],["Corgi",4,0],["Soteris",4,0],["Faura",4,0],["Sola",4,0],["CompScience",4,0],["Armilla AI",4,0],["Andera",5,0],["Cortea",5,0],["Chronograph",4,0],["Fraudio",4,0],["Karta",2,0],["CREST",3,0],["Causa Prima",2,0],["Interchecks",2,0],["Monument Technology",3,0],["Spektr",0,0],["Diligent AI",0,0],["Bretton AI",0,0],["Zango AI",0,0],["Apiax",0,0],["Steward",0,0],["Datox AI",0,0],["Topograph",0,0],["Zamp",0,0],["Cleo Labs",0,0],["Bleckwen",4,0],["Cleafy",4,0],["Aviel Intelligence",4,0],["Vouchsafe",4,0],["Duna",4,0],["Didit",4,0],["Fuse",1,0],["Fintern",1,0],["Balerion AI",1,0],["Oolka",1,0],["Nesto",1,0],["Obin AI",4,0],["Fifth Dimension AI",4,0],["Theia Insights",4,0],["OffDeal",4,0],["Serafis",4,0],["Metal",4,0],["TwoWay",4,0],["Deeptree",4,0],["Tracelight",4,0],["Elastics",4,0],["Round",2,0],["Fazeshift",2,0],["Inscope",2,0],["Embat",2,0],["OpenCFO",2,0],["Olarry",2,0],["Bracket",2,0],["Indigo",4,0],["Qumis",4,0],["General Magic",4,0],["Pace",4,0],["Ceto",4,0],["Gangkhar",4,0],["Stitch",3,0],["OpenCoreOS",3,0],["Titan",3,0],["Ralio",3,0],["Saris",5,0],["Porters",5,0],["Clarity",5,0],["DPDzero",5,0],["Domu Technology",5,0],["Waniwani",5,0],["Nava",0,0],["Nevis",3,0],["Performativ",3,0],["Marloo",3,0],["WealthAi",3,0],["Audrey AI",0,0],["Denki",0,0],["Certiv",0,0],["Compliance.ai",0,0],["Detected",0,0],["Uniify",0,0],["Hazy",3,0],["Deduce",4,0],["CertifID",4,0],["DirectID",1,0],["Verqor",1,0],["RiskSeal",1,0],["Portrait Analytics",4,0],["Linq",4,0],["Cognaize",4,0],["ClimateAligned",4,0],["Panax",2,0],["Kintsugi",2,0],["Ntropy",3,0],["Neo Tax",2,0],["Kasisto",5,0],["FutureProof",4,0],["Extend",1,0],["Robin AI",0,0],["Condukt",0,0],["Strise",0,0],["Salv",0,0],["Sandbar",0,0],["Global Screening Services",0,0],["Tintra",0,0],["Bits Technology",0,0],["Veridox",4,0],["Trustpair",4,0],["FairPlay AI",1,0],["TomoCredit",1,0],["Credolab",1,0],["Tangible",1,0],["Coremont",4,0],["Tradeteq",4,0],["Arch",4,0],["Coterie",4,0],["Zesty.ai",4,0],["Outmarket AI",4,0],["Comeryx",4,0],["mea",4,0],["Optalitix",4,0],["Alicia Insurance",4,0],["Puzzle",2,0],["Brightflow AI",2,0],["Finmatics",2,0],["Fintower",2,0],["Bavest",3,0],["Wafeq",2,0],["TrueAccord",5,0],["Outgo",5,0],["Twisp",3,0],["DreamQuark",5,0],["Origin",3,0],["Masttro",3,0],["Sidekick",3,0],["Monnai",4,0],["nSure.ai",4,0],["Sinpex",0,0],["Secfix",0,0],["Karavel",0,0],["Uplinq",1,0],["Kennek",1,0],["PeopleFund",1,0],["Kaaj",1,0],["Palomma",1,0],["TRIVER",1,0],["Dataglade",4,0],["Fintary",4,0],["Kinro",4,0],["Candex",2,0],["Rowspace",5,0],["NOVAPRO",3,0],["Variance",4,0],["FinregE",0,0],["ACTICO",0,0],["AccessFintech",4,0],["Streetbeat",4,0],["finbots.ai",1,0],["Knight FinTech",1,0],["Finzly",3,0],["Zeta",3,1],["AviaryAI",5,0],["Senso.ai",5,0],["Eltropy",5,1],["Maxima",2,0],["Lassie",4,0],["Advance",4,0],["SigFig",3,0],["Endowus",3,1],["Areal.ai",1,0],["Tungsten Automation",1,1],["Tidalwave",1,0],["Gateless",1,0],["Candor Technology",1,0],["Corgi Labs",4,0],["ICE Mortgage Technology",1,1],["Maxwell",1,0],["Polly",1,0],["Stavvy",1,0],["Dark Matter Technologies",1,1],["TRUE",1,0],["Cloudvirga",1,1],["Wilqo",1,0],["Nova Credit",1,0],["Provenir",1,1],["FICO",1,1],["Experian",1,1],["Lentra",1,0],["MeridianLink",1,1],["SymphonyAI",0,1],["NICE Actimize",0,1],["SAS",0,1],["Verafin",0,1],["Prove Identity",4,0],["AU10TIX",4,1],["Signicat",4,1],["BlackRock Aladdin",4,1],["MSCI",4,1],["Sigtech",4,0],["Exabel",4,0],["FactSet",4,1],["Dataminr",4,1],["Tegus",4,1],["Temenos",3,1],["Finxact",3,1],["FIS",3,1],["Fiserv",3,1],["Oracle Financial Services",3,1],["TCS BaNCS",3,1],["Cytora",4,0],["Planck",4,0],["hyperexponential",4,0],["Send",4,0],["Cape Analytics",4,0],["Guidewire",4,1],["Verisk",4,1],["Droit",0,0],["Suade Labs",0,0],["FundApps",0,0],["Tipalti",2,1],["Centime",2,0],["AvidXchange",2,1],["Stampli",2,0],["Betterment",3,1],["Wealthfront",3,1],["Vise",3,0],["Range",3,0],["FP Alpha",3,0],["Nitrogen",3,1],["Vanilla",3,0],["Holistiplan",3,0],["Cognigy",5,1],["Kore.ai",5,1],["Clinc",5,0],["Gridspace",5,0],["Hyperplane",5,1],["Boost.ai",5,0],["Ada",5,1],["Solas AI",0,0],["Arthur AI",0,0],["FairNow",0,0],["Solytics Partners",0,0],["Palantir",3,1],["C3.ai",3,1],["SambaNova",3,0],["Cohere",3,0],["Snorkel AI",3,0],["Databricks",3,1],["Vertice AI",5,0],["Ventus AI",5,0],["Rexi",2,0],["GPTadvisor",3,0],["Kato",1,0],["McCarthy Hatch",0,0],["Transvision",0,0],["CUltivate",5,0],["Go Abacus",0,0],["Winnow",0,0],["MHC",5,0],["Voyager AI",1,0],["Palomonte Labs",3,0]];
+const CLUSTERS = ["RISK & COMPLIANCE","LENDING & CREDIT","PAYMENTS & TREASURY","CORE & PLATFORMS","DATA & INTELLIGENCE","OPERATIONS & SERVICE"];
+
+const canvas = document.getElementById('viz');
+const ctx = canvas.getContext('2d');
+const tip = document.getElementById('tip');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W, H, dpr, pts = [], centers = [], mouse = {x:-1e4, y:-1e4}, t0 = null, raf = null;
+
+function layout(){
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  W = canvas.offsetWidth;
+  H = canvas.offsetHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const mobile = W < 900;
+  // Cluster centers: right-weighted arc on desktop, lower field on mobile
+  const cx = mobile ? W * .5 : W * .68, cy = mobile ? H * .62 : H * .5;
+  const R = mobile ? Math.min(W, H) * .34 : Math.min(W * .30, H * .38);
+  centers = CLUSTERS.map((_, i) => {
+    const a = (i / CLUSTERS.length) * Math.PI * 2 - Math.PI / 2;
+    return { x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R * .78 };
+  });
+  const spread = mobile ? 52 : 74;
+  pts = NODES.map((n, i) => {
+    const c = centers[n[1]];
+    const a = Math.random() * Math.PI * 2;
+    const r = Math.sqrt(Math.random()) * spread * (1 + (n[1] % 2) * .18);
+    return {
+      name: n[0], inc: n[2] === 1,
+      tx: c.x + Math.cos(a) * r, ty: c.y + Math.sin(a) * r * .85,
+      x: Math.random() * W, y: Math.random() * H,
+      ph: Math.random() * Math.PI * 2, sp: .4 + Math.random() * .6
+    };
+  });
+}
+
+function draw(now){
+  if (!t0) t0 = now;
+  const load = Math.min((now - t0) / 2400, 1);
+  const e = 1 - Math.pow(1 - load, 3);   // easeOutCubic resolve
+  ctx.clearRect(0, 0, W, H);
+  const time = now * .0004;
+  let nearest = null, nd = 3600;
+  for (const p of pts){
+    const wob = 3.5 * Math.sin(time * p.sp + p.ph);
+    let x = p.x + (p.tx - p.x) * e + wob;
+    let y = p.y + (p.ty - p.y) * e + Math.cos(time * p.sp + p.ph) * 2.5;
+    const dx = x - mouse.x, dy = y - mouse.y, d2 = dx * dx + dy * dy;
+    if (d2 < 8100){ const f = (90 - Math.sqrt(d2)) / 90 * 14; const d = Math.sqrt(d2) || 1; x += dx / d * f; y += dy / d * f; }
+    if (d2 < nd){ nd = d2; nearest = { x, y, name: p.name }; }
+    if (p.inc){ ctx.fillStyle = '#8B93A3'; ctx.globalAlpha = .75; ctx.beginPath(); ctx.arc(x, y, 2.3, 0, 7); ctx.fill(); }
+    else { ctx.fillStyle = '#2E71E5'; ctx.globalAlpha = .8; ctx.beginPath(); ctx.arc(x, y, 1.7, 0, 7); ctx.fill(); }
+  }
+  ctx.globalAlpha = 1;
+  // Cluster labels fade in after resolve
+  if (e > .85){
+    ctx.font = '500 10px "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(161,161,170,' + ((e - .85) / .15 * .85) + ')';
+    ctx.textAlign = 'center';
+    centers.forEach((c, i) => ctx.fillText(CLUSTERS[i], c.x, c.y - (W < 900 ? 58 : 82)));
+  }
+  if (nearest && nd < 900 && mouse.x > 0){
+    tip.textContent = nearest.name;
+    tip.style.left = nearest.x + 'px'; tip.style.top = nearest.y + 'px';
+    tip.classList.add('on');
+  } else tip.classList.remove('on');
+  raf = requestAnimationFrame(draw);
+}
+
+layout();
+addEventListener('resize', () => { layout(); if (reduced) staticDraw(); });
+canvas.parentElement.addEventListener('pointermove', ev => {
+  const r = canvas.getBoundingClientRect(); mouse.x = ev.clientX - r.left; mouse.y = ev.clientY - r.top;
+});
+canvas.parentElement.addEventListener('pointerleave', () => { mouse.x = mouse.y = -1e4; });
+
+function staticDraw(){
+  ctx.clearRect(0, 0, W, H);
+  for (const p of pts){
+    ctx.fillStyle = p.inc ? '#8B93A3' : '#2E71E5';
+    ctx.globalAlpha = p.inc ? .75 : .8;
+    ctx.beginPath(); ctx.arc(p.tx, p.ty, p.inc ? 2.3 : 1.7, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.font = '500 10px "JetBrains Mono", monospace';
+  ctx.fillStyle = 'rgba(161,161,170,.85)'; ctx.textAlign = 'center';
+  centers.forEach((c, i) => ctx.fillText(CLUSTERS[i], c.x, c.y - (W < 900 ? 58 : 82)));
+}
+
+if (reduced){ staticDraw(); document.getElementById('counter').textContent = NODES.length.toLocaleString(); }
+else {
+  raf = requestAnimationFrame(draw);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancelAnimationFrame(raf);
+    else { raf = requestAnimationFrame(draw); }
+  });
+  // Counter: count-up synced to the resolve
+  const el = document.getElementById('counter'), total = NODES.length, cs = performance.now();
+  (function tick(n){
+    const p = Math.min((n - cs) / 2400, 1);
+    el.textContent = Math.round(total * (1 - Math.pow(1 - p, 3))).toLocaleString();
+    if (p < 1) requestAnimationFrame(tick);
+  })(cs);
+}
+
+/* Reveal-on-scroll: fires once */
+const io = new IntersectionObserver(es => es.forEach(x => {
+  if (x.isIntersecting){ x.target.classList.add('in-view'); io.unobserve(x.target); }
+}), { threshold: .18 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

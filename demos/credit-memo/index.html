@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credit Memo Assistant — underwriting argument map · Catalyst-DNA</title>
+<meta name="description" content="The memo as a visible chain of claims, evidence, risks, and mitigants — with a stress lens that rebuilds the whole map pessimistically. Live generation on a clearly-labeled fictional packet.">
+<link rel="canonical" href="https://catalyst-dna.com/demos/credit-memo/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ==== catalyst-dna tokens (inlined per single-file law) ==== */
+:root{
+  --bg-primary:#09090B; --surface:#18181B; --surface-raised:#1F1F24;
+  --border:#27272A; --border-active:#33415C;
+  --text-primary:#FAFAFA; --text-secondary:#A1A1AA; --text-tertiary:#6F6F78;
+  --accent:#2E71E5; --accent-bright:#6FA2F5;
+  --accent-glow:rgba(46,113,229,.32); --warn:#E0A43C;
+  --font-display:"Outfit",system-ui,sans-serif;
+  --font-body:"DM Sans",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1.0625rem; --text-lg:1.25rem;
+  --duration-fast:150ms; --ease-out:cubic-bezier(.22,1,.36,1);
+  --radius-sm:6px; --radius-md:10px; --tracking-eyebrow:.14em;
+  --ok:#4C9E7E; --ok-dim:rgba(76,158,126,.14);
+  --warn-dim:rgba(224,164,60,.14);
+  --alert:#C4574E; --alert-dim:rgba(196,87,78,.14);
+  --tl-chip-h:1.375rem; --tl-inset:.875rem; --tl-hairline:1px solid var(--border);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-body);
+  font-size:var(--text-base);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-bright);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 2rem;backdrop-filter:blur(12px);background:rgba(9,9,11,.72);border-bottom:1px solid var(--border)}
+.nav .brand{font-family:var(--font-display);font-weight:600;font-size:1.05rem}
+.nav .brand em{font-style:normal;color:var(--accent-bright)}
+.nav .back{font-size:var(--text-sm);color:var(--text-secondary)}
+.nav .back:hover{color:var(--text-primary)}
+.wrap{max-width:50rem;margin:0 auto;padding:0 1.5rem}
+.eyebrow{font-family:var(--font-mono);font-size:var(--text-xs);font-weight:500;
+  letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--accent-bright)}
+.head{padding:3.4rem 0 1.8rem}
+.head h1{font-family:var(--font-display);font-weight:700;font-size:clamp(1.7rem,4vw,2.4rem);
+  letter-spacing:-.015em;line-height:1.12;margin:.8rem 0 .7rem}
+.head .sub{color:var(--text-secondary);max-width:40rem}
+.badge{display:inline-flex;align-items:center;gap:.45rem;margin-top:.9rem;
+  font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--warn)}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--warn)}
+
+/* ==== trust layer ==== */
+.tl-cite{display:inline-flex;align-items:center;gap:.3rem;height:var(--tl-chip-h);padding:0 .5rem;
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);
+  font-family:var(--font-mono);font-size:var(--text-xs);color:var(--accent-bright);cursor:pointer;vertical-align:baseline;
+  transition:border-color var(--duration-fast) var(--ease-out)}
+.tl-cite:hover{border-color:var(--border-active);background:var(--surface-raised)}
+.tl-cite::before{content:"§";color:var(--text-tertiary);font-size:.9em}
+.tl-cite--derived::before{content:"="}
+.tl-cite--derived{color:var(--text-secondary)}
+.tl-exc{display:grid;grid-template-columns:minmax(6rem,.8fr) 1.4fr 1.4fr;gap:1rem;
+  padding:var(--tl-inset);border:var(--tl-hairline);border-left:2px solid var(--warn);
+  border-radius:var(--radius-sm);background:var(--surface);font-size:var(--text-sm)}
+.tl-exc + .tl-exc{margin-top:.5rem}
+.tl-exc-field{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-primary);align-self:start;padding-top:.1rem}
+.tl-exc-why{color:var(--text-secondary)}
+.tl-exc-fix{color:var(--text-primary)}
+.tl-exc-fix::before{content:"resolves: ";font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-tertiary)}
+@media(max-width:720px){.tl-exc{grid-template-columns:1fr;gap:.35rem}}
+.tl-engage{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem 1rem;
+  padding:.65rem var(--tl-inset);border:1px dashed var(--border);border-radius:var(--radius-sm)}
+.tl-engage-check{font-size:var(--text-sm);color:var(--text-secondary)}
+.tl-engage-check + .tl-engage-check::before{content:"· ";color:var(--text-tertiary)}
+.tl-engage-tag{margin-left:auto;font-family:var(--font-mono);font-size:var(--text-xs);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);white-space:nowrap}
+.tl-gate{display:flex;align-items:center;gap:.875rem;margin-top:1.25rem;padding:var(--tl-inset);
+  border:var(--tl-hairline);border-radius:var(--radius-md);background:var(--surface)}
+.tl-gate::before{content:"";width:10px;height:10px;border-radius:50%;flex:none;
+  background:var(--warn);box-shadow:0 0 8px var(--warn-dim)}
+.tl-gate-state{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text-secondary);flex:none}
+.tl-gate-holder{font-size:var(--text-sm);color:var(--text-primary)}
+
+/* ==== surface: underwriting argument map ==== */
+.controls{display:flex;gap:.7rem;padding:1.2rem 0 .4rem;flex-wrap:wrap}
+.controls select{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text-primary);font-family:var(--font-body);font-size:var(--text-sm);padding:.6rem .8rem}
+.controls select:focus{border-color:var(--border-active);outline:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;font-weight:500;font-size:var(--text-sm);
+  padding:.6rem 1.15rem;border:none;border-radius:var(--radius-sm);background:var(--accent);color:#fff;
+  cursor:pointer;font-family:var(--font-body);transition:box-shadow var(--duration-fast) var(--ease-out)}
+.btn:hover{box-shadow:0 0 24px var(--accent-glow)}
+.btn[disabled]{opacity:.55;cursor:wait;box-shadow:none}
+.note{font-size:var(--text-xs);color:var(--text-tertiary);font-family:var(--font-mono);padding:.3rem 0 1rem}
+
+.map{padding:1.2rem 0 3.6rem;display:none}
+.map.on{display:block}
+
+/* request header */
+.req{border:var(--tl-hairline);border-radius:var(--radius-md);background:var(--surface);
+  padding:1.1rem 1.2rem;margin-bottom:1rem;display:flex;gap:1.2rem;flex-wrap:wrap;align-items:baseline}
+.req .r-text{font-family:var(--font-display);font-weight:600;font-size:var(--text-lg);flex:1;min-width:16rem}
+.req .r-amt{font-family:var(--font-mono);font-size:var(--text-sm);color:var(--accent-bright)}
+
+/* lens toggle: two parallel maps, one visible */
+.lens{display:inline-flex;border:var(--tl-hairline);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:1rem}
+.lens button{background:var(--surface);border:none;color:var(--text-secondary);font-family:var(--font-mono);
+  font-size:var(--text-xs);letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1rem;cursor:pointer}
+.lens button[aria-pressed="true"]{background:var(--surface-raised);color:var(--text-primary)}
+.lens button.stress[aria-pressed="true"]{color:var(--warn)}
+
+/* claim node: the chain link */
+.claim{border:var(--tl-hairline);border-radius:var(--radius-md);background:var(--surface);
+  padding:1.15rem 1.25rem;margin-bottom:.9rem;position:relative}
+.claim::before{content:"";position:absolute;left:1.4rem;top:100%;height:.9rem;width:2px;background:var(--border)}
+.claim:last-of-type::before{display:none}
+.claim .cl-claim{font-family:var(--font-display);font-weight:600;font-size:var(--text-base);margin-bottom:.7rem}
+.strand{margin-top:.6rem}
+.strand .st-label{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;
+  text-transform:uppercase;display:block;margin-bottom:.3rem}
+.strand--evidence .st-label{color:var(--ok)}
+.strand--risk .st-label{color:var(--warn)}
+.strand--mitigant .st-label{color:var(--accent-bright)}
+.strand--exception .st-label{color:var(--alert)}
+.strand .row{font-size:var(--text-sm);color:var(--text-secondary);padding:.2rem 0}
+.strand .row .chips{margin-left:.4rem}
+.pol{display:inline-flex;align-items:baseline;gap:.5rem;font-size:var(--text-sm);
+  border:1px solid rgba(196,87,78,.35);border-radius:var(--radius-sm);
+  background:var(--alert-dim);padding:.4rem .7rem;margin-top:.3rem}
+.pol .p-req{color:var(--text-secondary);font-size:var(--text-xs)}
+
+/* stress map variant */
+#stressMap .claim{border-left:2px solid var(--warn)}
+.weakest{border:1px solid rgba(224,164,60,.4);border-radius:var(--radius-md);
+  background:var(--warn-dim);padding:1.1rem 1.2rem;margin-bottom:.9rem}
+.weakest h2{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--tracking-eyebrow);
+  text-transform:uppercase;color:var(--warn);margin-bottom:.55rem}
+.weakest .w-item{font-size:var(--text-sm);padding:.25rem 0}
+
+/* verdict */
+.verdict{border:1px solid var(--border-active);border-radius:var(--radius-md);
+  background:var(--surface);padding:1.15rem 1.25rem;margin-top:1rem}
+.verdict h2{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--tracking-eyebrow);
+  text-transform:uppercase;color:var(--accent-bright);margin-bottom:.55rem}
+.verdict .v-text{font-family:var(--font-display);font-weight:600;margin-bottom:.6rem}
+.verdict .cond{font-size:var(--text-sm);color:var(--text-secondary);padding:.2rem 0 .2rem 1.2rem;position:relative}
+.verdict .cond::before{content:"→";position:absolute;left:0;color:var(--accent-bright)}
+
+.err{border:1px solid var(--alert);border-radius:var(--radius-sm);background:var(--alert-dim);
+  font-size:var(--text-sm);padding:.8rem 1rem;margin:1rem 0;display:none}
+.raw{white-space:pre-wrap;font-size:var(--text-sm);color:var(--text-secondary);
+  border:var(--tl-hairline);border-radius:var(--radius-md);padding:1.2rem;margin-top:1rem;display:none}
+.skeleton{display:none;padding:1.5rem 0}
+.skeleton .sk{height:5.4rem;border:var(--tl-hairline);border-radius:var(--radius-md);
+  background:linear-gradient(100deg,var(--surface) 40%,var(--surface-raised) 50%,var(--surface) 60%);
+  background-size:200% 100%;animation:sk 1.4s ease infinite;margin-bottom:.7rem}
+@keyframes sk{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.skeleton .sk{animation:none}}
+.footer{border-top:1px solid var(--border);padding:2rem;display:flex;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;font-size:var(--text-sm);color:var(--text-tertiary)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">Catalyst<em>-DNA</em></div>
+  <a class="back" href="/demos/">← All demos</a>
+</nav>
+
+<header class="head">
+  <div class="wrap">
+    <div class="eyebrow">Chief Credit Officer · Live demo · Fictional packet</div>
+    <h1>Credit Memo — the underwriting argument map</h1>
+    <p class="sub">Not prose with numbers in it — a visible chain of claims, each standing on its evidence, carrying its risks and mitigants, citing its policy touchpoints. Flip the stress lens and the whole map rebuilds pessimistically.</p>
+    <div class="badge"><span class="dot"></span>Fictional packet · Tillman Fabrication LLC</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="controls">
+    <select id="focus">
+      <option value="standard">Balanced memo</option>
+      <option value="cashflow">Deep on cash flow &amp; sensitivity</option>
+      <option value="collateral">Deep on collateral</option>
+    </select>
+    <button class="btn" id="run">Draft the memo</button>
+  </div>
+  <div class="note">The packet: $1.2M equipment term + $400k LOC renewal, Tillman Fabrication LLC — entirely fictional, seeded with a 1.20x coverage tension against the 1.25x floor.</div>
+
+  <div class="err" id="err"></div>
+  <div class="skeleton" id="skel"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+
+  <section class="map" id="map" aria-live="polite">
+    <div id="req"></div>
+
+    <div class="lens" role="group" aria-label="Argument lens">
+      <button id="baseBtn" aria-pressed="true">Base case</button>
+      <button id="stressBtn" class="stress" aria-pressed="false">Stress lens</button>
+    </div>
+
+    <div id="baseMap"></div>
+    <div id="stressMap" hidden></div>
+    <div id="exceptions"></div>
+    <div id="verdict"></div>
+
+    <div class="tl-engage" role="note" style="margin-top:1rem">
+      <span class="tl-engage-check">K-1 tracing across related entities</span>
+      <span class="tl-engage-check">Covenant-conflict scan against the book</span>
+      <span class="tl-engage-check">Statement-recency verification</span>
+      <span class="tl-engage-tag">requires bank data · engagement mode</span>
+    </div>
+
+    <div class="tl-gate" data-state="draft">
+      <span class="tl-gate-state">Draft</span>
+      <span class="tl-gate-holder">Not a credit decision — review rests with the Credit Analyst and Loan Committee</span>
+    </div>
+  </section>
+
+  <pre class="raw" id="raw"></pre>
+</main>
+
+<footer class="footer">
+  <span>© 2026 Catalyst-DNA LLC</span>
+  <span>Fictional packet · no live borrower data</span>
+</footer>
+
+<script>
+const WORKER_BASE = "https://REPLACE-ME.workers.dev";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const usd = n => typeof n === "number" ? n.toLocaleString("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}) : esc(n);
+
+function citeChips(cites){
+  return (cites || []).map(c => {
+    if(c.kind === "derived") return `<span class="tl-cite tl-cite--derived" title="${esc(c.formula || "")}">${esc(c.label || "arithmetic")}</span>`;
+    return `<span class="tl-cite">${esc(c.ref || c.label || "packet")}</span>`;
+  }).join(" ");
+}
+
+function claimNode(node){
+  const ev = (node.evidence || []).map(e =>
+    `<div class="row">${esc(e.text)}<span class="chips">${citeChips(e.cites)}</span></div>`).join("");
+  const rk = (node.risks || []).map(r =>
+    `<div class="row">${esc(r.text)}<span class="chips">${citeChips(r.cites)}</span></div>`).join("");
+  const mt = (node.mitigants || []).map(m =>
+    `<div class="row">${esc(m.text)}<span class="chips">${citeChips(m.cites)}</span></div>`).join("");
+  const px = (node.policyExceptions || []).map(x =>
+    `<div class="pol"><span class="tl-cite">${esc(x.ref)}</span><span class="p-req">${esc(x.requires)}</span></div>`).join("");
+  return `<article class="claim">
+    <div class="cl-claim">${esc(node.claim)}</div>
+    ${ev ? `<div class="strand strand--evidence"><span class="st-label">Evidence</span>${ev}</div>` : ""}
+    ${rk ? `<div class="strand strand--risk"><span class="st-label">Risks</span>${rk}</div>` : ""}
+    ${mt ? `<div class="strand strand--mitigant"><span class="st-label">Mitigants</span>${mt}</div>` : ""}
+    ${px ? `<div class="strand strand--exception"><span class="st-label">Policy exceptions</span>${px}</div>` : ""}
+  </article>`;
+}
+
+function renderMap(p){
+  $("req").innerHTML = `
+    <div class="req">
+      <span class="r-text">${esc(p.request?.text)}</span>
+      ${(p.request?.amounts || []).map(a => `<span class="r-amt">${esc(a.label)}: ${usd(a.value)}</span>`).join("")}
+    </div>`;
+
+  $("baseMap").innerHTML = (p.map || []).map(claimNode).join("");
+
+  const s = p.stressLens || {};
+  $("stressMap").innerHTML = `
+    <div class="weakest">
+      <h2>Scenario: ${esc(s.scenario || "stress")} — the facts that most weaken this credit</h2>
+      ${(s.weakestFacts || []).map(w => `<div class="w-item">${esc(w)}</div>`).join("")}
+    </div>
+    ${(s.map || []).map(claimNode).join("")}`;
+
+  $("exceptions").innerHTML = (p.exceptions || []).length ? `
+    <div role="list" style="margin-top:.4rem">
+      ${(p.exceptions || []).map(x => `
+        <div class="tl-exc" role="listitem">
+          <span class="tl-exc-field">${esc(x.field || x.id)}</span>
+          <span class="tl-exc-why">${esc(x.why || x.what)}</span>
+          <span class="tl-exc-fix">${esc(x.fix)}</span>
+        </div>`).join("")}
+    </div>` : "";
+
+  $("verdict").innerHTML = `
+    <div class="verdict">
+      <h2>Draft recommendation</h2>
+      <div class="v-text">${esc((p.recommendation?.verdict || "").replace(/-/g, " "))}</div>
+      ${(p.recommendation?.conditions || []).map(c => `<div class="cond">${esc(c)}</div>`).join("")}
+    </div>`;
+
+  $("map").classList.add("on");
+}
+
+/* lens toggle: two maps, one visible — the toggle never rewrites nodes */
+$("baseBtn").addEventListener("click", () => {
+  $("baseBtn").setAttribute("aria-pressed","true"); $("stressBtn").setAttribute("aria-pressed","false");
+  $("baseMap").hidden = false; $("stressMap").hidden = true;
+});
+$("stressBtn").addEventListener("click", () => {
+  $("stressBtn").setAttribute("aria-pressed","true"); $("baseBtn").setAttribute("aria-pressed","false");
+  $("stressMap").hidden = false; $("baseMap").hidden = true;
+});
+
+$("run").addEventListener("click", async () => {
+  $("err").style.display="none"; $("raw").style.display="none"; $("map").classList.remove("on");
+  $("run").disabled = true; $("skel").style.display = "block";
+  try{
+    const res = await fetch(WORKER_BASE + "/creditmemo", {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ focus: $("focus").value })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || "Agent unavailable — try again in a minute.");
+    if(data.envelope && data.payload){ renderMap(data.payload); }
+    else if(data.output){ $("raw").textContent = data.output; $("raw").style.display = "block"; }
+    else { throw new Error("Unexpected response shape."); }
+  } catch(e){ $("err").textContent = e.message; $("err").style.display = "block"; }
+  finally { $("run").disabled = false; $("skel").style.display = "none"; }
+});
+</script>
+</body>
+</html>

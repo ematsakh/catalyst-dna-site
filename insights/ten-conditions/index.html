@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ten Conditions: why some banks put AI in production and most don't · Catalyst-DNA</title>
+<meta name="description" content="Ten organisational and operational conditions that separate banks running AI in production from banks running pilots. A framework from the operator who built one of the world's leading bank analytics functions.">
+<link rel="canonical" href="https://catalyst-dna.com/insights/ten-conditions/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://catalyst-dna.com/insights/ten-conditions/">
+<meta property="og:title" content="The Ten Conditions: why some banks put AI in production and most don't">
+<meta property="og:description" content="Ten conditions that separate production from pilots — five organisational, five operational. Weaknesses on the left create ceilings on the right.">
+<meta property="og:site_name" content="Catalyst-DNA">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"The Ten Conditions: why some banks put AI in production and most don't","author":{"@type":"Person","name":"Emil Matsakh"},"publisher":{"@type":"Organization","name":"Catalyst-DNA","url":"https://catalyst-dna.com"},"datePublished":"2026-07","url":"https://catalyst-dna.com/insights/ten-conditions/"}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-primary:#FAF7F1; --surface:#FFFFFF;
+  --border:#E5E0D6; --border-active:#C7CFE0;
+  --text-primary:#1C1C20; --text-secondary:#5C5A55; --text-tertiary:#8A867E;
+  --accent:#1D53B8; --accent-bright:#2E71E5; --accent-wash:rgba(29,83,184,.06);
+  --font-display:"Newsreader","Outfit",serif;
+  --font-body:"Source Serif 4",Georgia,serif;
+  --font-ui:"DM Sans",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1.125rem;
+  --duration-fast:150ms; --ease-out:cubic-bezier(.22,1,.36,1);
+  --radius-sm:6px; --radius-md:10px; --tracking-eyebrow:.14em;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-body);
+  font-size:var(--text-base);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;text-align:left}
+
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 2rem;backdrop-filter:blur(12px);background:rgba(250,247,241,.85);
+  border-bottom:1px solid var(--border);font-family:var(--font-ui)}
+.nav .brand{font-family:"Outfit",sans-serif;font-weight:600;font-size:1.05rem;color:var(--text-primary)}
+.nav .brand em{font-style:normal;color:var(--accent)}
+.nav .links{display:flex;gap:1.75rem;font-size:var(--text-sm)}
+.nav .links a{color:var(--text-secondary);transition:color var(--duration-fast) var(--ease-out)}
+.nav .links a:hover,.nav .links a[aria-current]{color:var(--text-primary)}
+@media(max-width:720px){.nav .links{display:none}}
+.btn{display:inline-flex;font-family:var(--font-ui);font-weight:500;font-size:var(--text-sm);
+  padding:.55rem 1rem;border-radius:var(--radius-sm);background:var(--accent);color:#fff;
+  transition:background var(--duration-fast) var(--ease-out)}
+.btn:hover{background:var(--accent-bright)}
+
+.wrap{max-width:42rem;margin:0 auto;padding:0 1.5rem}
+.wrap-wide{max-width:60rem;margin:0 auto;padding:0 1.5rem}
+.eyebrow{font-family:var(--font-mono);font-size:var(--text-xs);font-weight:500;
+  letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--accent)}
+
+.head{padding:4.5rem 0 2.4rem}
+.head h1{font-family:var(--font-display);font-weight:600;font-size:clamp(2rem,4.8vw,2.9rem);
+  line-height:1.15;letter-spacing:-.01em;margin:.9rem 0 1.2rem}
+.byline{font-family:var(--font-ui);font-size:var(--text-sm);color:var(--text-tertiary);
+  padding-bottom:1.8rem;border-bottom:1px solid var(--border)}
+.byline b{color:var(--text-primary);font-weight:500}
+
+article{padding:2.4rem 0 0}
+article p{margin-bottom:1.5rem}
+article p b{font-weight:500;color:var(--text-primary)}
+.lede{font-size:1.28rem;line-height:1.6;color:var(--text-primary)}
+.pull{font-family:var(--font-display);font-weight:500;font-size:1.5rem;line-height:1.4;
+  color:var(--text-primary);border-left:3px solid var(--accent);
+  padding:.3rem 0 .3rem 1.4rem;margin:2.4rem 0}
+
+/* ---- interactive framework ---- */
+.framework{padding:2.4rem 0 1rem}
+.fw-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
+@media(max-width:760px){.fw-grid{grid-template-columns:1fr}}
+.col-label{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--tracking-eyebrow);
+  text-transform:uppercase;color:var(--text-tertiary);margin-bottom:.8rem}
+.fw-card{display:flex;gap:.85rem;align-items:baseline;width:100%;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:.9rem 1.05rem;margin-bottom:.55rem;font-family:var(--font-ui);
+  font-size:var(--text-sm);line-height:1.45;color:var(--text-primary);
+  transition:border-color var(--duration-fast) var(--ease-out),background var(--duration-fast) var(--ease-out)}
+.fw-card:hover{border-color:var(--border-active)}
+.fw-card.on{border-color:var(--accent);background:var(--accent-wash)}
+.fw-card .n{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--accent);flex:none}
+.detail{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:1.7rem 1.9rem;margin-top:1.4rem}
+.detail .dn{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent)}
+.detail h3{font-family:var(--font-display);font-weight:600;font-size:1.35rem;line-height:1.3;margin:.5rem 0 .8rem}
+.detail p{font-size:1.02rem;line-height:1.7;color:var(--text-secondary);margin-bottom:1rem}
+.detail .ev{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-tertiary);letter-spacing:.04em}
+
+.close-section{padding:1.4rem 0 4rem}
+.thresholds{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:1.7rem 1.9rem;margin:1.4rem 0 2rem}
+.thresholds .t-row{display:flex;gap:1rem;padding:.7rem 0;border-bottom:1px solid var(--border);
+  font-size:1rem;line-height:1.6;color:var(--text-secondary)}
+.thresholds .t-row:last-child{border-bottom:none}
+.thresholds .t-row .n{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--accent);flex:none;margin-top:.3rem}
+.cta-row{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1.6rem}
+.btn-ghost{display:inline-flex;font-family:var(--font-ui);font-weight:500;font-size:var(--text-sm);
+  padding:.55rem 1rem;border-radius:var(--radius-sm);border:1px solid var(--border);color:var(--text-primary)}
+.btn-ghost:hover{border-color:var(--border-active)}
+.footer{border-top:1px solid var(--border);padding:2rem;display:flex;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;font-family:var(--font-ui);font-size:var(--text-sm);color:var(--text-tertiary)}
+@media print{.nav,.cta-row,.footer{display:none!important}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">Catalyst<em>-DNA</em></div>
+  <div class="links">
+    <a href="/#services">Services</a><a href="/finai-1000/">Data Products</a><a href="/insights/" aria-current="page">Insights</a><a href="/about/">About</a>
+  </div>
+  <a class="btn" href="/#contact">Book a working session</a>
+</nav>
+
+<header class="head">
+  <div class="wrap">
+    <div class="eyebrow">Insights · Framework</div>
+    <h1>The Ten Conditions: why some banks put AI in production and most don't</h1>
+    <div class="byline"><b>Emil Matsakh</b> · Founder, Catalyst-DNA · Former Chief Analytics Officer, top-10 global bank · July 2026</div>
+  </div>
+</header>
+
+<article>
+  <div class="wrap">
+    <p class="lede">Nearly ninety percent of analytics investment at a top-10 global bank was consumed before reaching any value-creating activity. That number was not a technology finding. It was an organisational one — and it is the single most useful lens for understanding why most banks pilot AI and a small number put it in production.</p>
+
+    <p>The difference between those two groups is not budget, and it is not size. The leading institution in this space moves from idea to production in six weeks — a benchmark that is a function of design decisions, not scale. Every one of those decisions is available to a $2bn community bank on the day of its first project.</p>
+
+    <p>Ten conditions separate the institutions that deploy from the institutions that demonstrate. Five are organisational. Five are operational. The framework has one organising principle: <b>weaknesses in the left column create ceilings on the right.</b> No operational excellence survives an organisational gap above it.</p>
+  </div>
+
+  <div class="framework wrap-wide">
+    <div class="fw-grid">
+      <div>
+        <div class="col-label">Organisational elements</div>
+        <div id="col-org"></div>
+      </div>
+      <div>
+        <div class="col-label">Operational enablers</div>
+        <div id="col-ops"></div>
+      </div>
+    </div>
+    <div class="detail" id="detail">
+      <div class="dn" id="d-num"></div>
+      <h3 id="d-title"></h3>
+      <p id="d-text"></p>
+      <div class="ev" id="d-ev"></div>
+    </div>
+  </div>
+
+  <div class="close-section wrap">
+    <p class="pull">The fastest AI deployers in financial services are not the least governed. They are the best pre-governed.</p>
+
+    <p>The ten conditions are not a maturity ladder to climb in sequence. They are a system — and like any system, it fails at its weakest point. A bank with world-class data infrastructure and no accountable business owner will produce pilots. A bank with committed leadership and project-built data will produce the same pilot three times.</p>
+
+    <p><b>Where to start.</b> Three thresholds determine whether the next dollar of AI investment creates value or evaporates:</p>
+
+    <div class="thresholds">
+      <div class="t-row"><span class="n">T1</span><span>If no named P&amp;L owner is accountable for your leading AI use case, stop investing in technology until one exists. Conditions 01, 02, and 05 come before any build.</span></div>
+      <div class="t-row"><span class="n">T2</span><span>If your last two analytics projects each rebuilt their own data from scratch, the next project must be a foundation, not a use case. Condition 07 is the compounding decision — a $10bn institution makes it on day one of its first project, or it does not make it at all.</span></div>
+      <div class="t-row"><span class="n">T3</span><span>If model approval takes longer than model development, governance is your constraint — and your accelerant. Pre-approved frameworks for standard use cases convert a six-month cycle into two weeks. Condition 09 before condition 08.</span></div>
+    </div>
+
+    <p>Scoring your institution against all ten takes six minutes. The self-assessment below runs on the same rubric this framework is built on, and returns your position on each condition with a prioritised starting point.</p>
+
+    <div class="cta-row">
+      <a class="btn" href="/tools/ai-readiness/">Score your bank against the ten conditions</a>
+      <a class="btn-ghost" href="/#contact">Discuss your result with us</a>
+    </div>
+  </div>
+</article>
+
+<footer class="footer">
+  <span>© 2026 Catalyst-DNA LLC</span>
+  <span><a href="/insights/" style="color:inherit">← All insights</a></span>
+</footer>
+
+<script>
+/* Ten conditions — CEO-register titles; card detail carries the evidence.
+   Details for 01, 06–10 are locked v7 text. Details for 02–05 are
+   reconstructions in the same discipline, pending Emil's review. */
+const C = [
+{ n:"01", col:0, t:"Compelling vision with measurable outcomes",
+  d:"A vision that does not specify commercial outcomes is a positioning statement, not a programme design. The analytics function at one leading institution was built around four explicit objectives — each with quantified targets: ROI greater than 3x on all investment, product delivery time halved, modelling productivity doubled. The vision was not aspirational. It was contractual.",
+  e:"Evidence: operator record, top-10 global bank analytics strategy" },
+{ n:"02", col:0, t:"Leadership accountable for business results, not just data quality",
+  d:"When the senior data role is measured on stewardship, the institution gets clean data and no value. Accountability for commercial results — revenue protected, cost removed, decisions improved — changes what the function builds and what the business expects of it. The title matters less than the scorecard attached to it.",
+  e:"Detail 02 reconstructed — pending review" },
+{ n:"03", col:0, t:"People who bridge the gap between business problems and analytical solutions",
+  d:"Models do not fail on mathematics; they fail on translation. Institutions that industrialise AI make the translator a defined career path with structured learning routes — not a favour asked of whoever understands both sides. Without that bridge, every use case renegotiates its own language from zero.",
+  e:"Detail 03 reconstructed — pending review" },
+{ n:"04", col:0, t:"An operating model designed for AI — not inherited from the past",
+  d:"The leading operating models in this space were architecturally designed — distinct pillars with distinct mandates, decisioning systems built as systems rather than collections of models, and a deliberate, phased journey rather than organic accretion. An operating model inherited from the reporting era will reproduce the reporting era's outputs.",
+  e:"Detail 04 reconstructed — pending review" },
+{ n:"05", col:0, t:"An experimentation culture that produces commercial outcomes, not just pilots",
+  d:"Experimentation without a commercial gate produces demonstrations. The discipline that separates leaders is asking 'should we?' before any build — testing customer impact alongside technical feasibility — and tying every initiative to a P&L objective before it is funded. Volume of pilots is not a maturity signal. Conversion is.",
+  e:"Detail 05 reconstructed — pending review" },
+{ n:"06", col:1, t:"A clear, evidence-based map of where AI creates the most value",
+  d:"At a top-10 global bank, the addressable analytics opportunity was quantified at over $3bn across four objectives. The most significant finding was not the total — it was that operational productivity, the largest single opportunity, was the most systematically underinvested area. That misalignment was a governance failure, not a technology failure. The value map is the instrument that makes it visible.",
+  e:"Evidence: operator record, top-10 global bank value-mapping exercise" },
+{ n:"07", col:1, t:"Data treated as an organisational asset, not project-level infrastructure",
+  d:"Nearly ninety percent of analytics investment at a top-10 global bank was consumed before reaching any value-creating activity. The cause was an architecture decision made implicitly on the first day of every project: build for this use case, or build for reuse. That decision compounds — every project that does not rebuild from scratch is a return on the original investment. It is not a large-bank advantage. A $10bn institution makes it on day one of its first project, or it does not make it at all.",
+  e:"Evidence: operator record, top-10 global bank investment analysis" },
+{ n:"08", col:1, t:"A direct path from analytical model to business decision",
+  d:"Most models that work in development never reach a business decision. The leading institution in this space moves from idea to production in six weeks. That benchmark is not a function of size or budget — it is a function of having built the pipeline that connects development to deployment to ongoing performance management. Most institutions outside the top tier have not built it yet.",
+  e:"Evidence: published deployment benchmark, leading AI bank" },
+{ n:"09", col:1, t:"AI governance built in from day one",
+  d:"Governance retrofitted to a completed model adds months to deployment and weakens the commercial case — then poisons the funding conversation for the next initiative. Governance designed before development, with pre-approved frameworks for standard use cases and clear human-oversight thresholds, converts a six-month approval cycle into two weeks. The fastest AI deployers in financial services are not the least governed. They are the best pre-governed.",
+  e:"Evidence: pre-deployment gate design, leading AI bank" },
+{ n:"10", col:1, t:"One team accountable from strategy through to live deployment",
+  d:"The pilot-to-production gap opens at the handoff between strategy and build, and again between build and run — when different parties own each phase with different incentives and no shared metric for the end-to-end outcome. Closing it requires treating strategy, build, and run as a single system from day one. That is not a service preference. It is the structural requirement for realising the value of the nine conditions above.",
+  e:"Evidence: structural claim of the framework" },
+];
+
+const $ = id => document.getElementById(id);
+let sel = 0;
+
+function render(){
+  $('col-org').innerHTML = ''; $('col-ops').innerHTML = '';
+  C.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'fw-card' + (i === sel ? ' on' : '');
+    b.innerHTML = '<span class="n">' + c.n + '</span><span>' + c.t + '</span>';
+    b.onclick = () => { sel = i; render(); };
+    (c.col === 0 ? $('col-org') : $('col-ops')).appendChild(b);
+  });
+  const c = C[sel];
+  $('d-num').textContent = c.n + ' — ' + (c.col === 0 ? 'Organisational element' : 'Operational enabler');
+  $('d-title').textContent = c.t;
+  $('d-text').textContent = c.d;
+  $('d-ev').textContent = c.e;
+}
+render();
+</script>
+</body>
+</html>

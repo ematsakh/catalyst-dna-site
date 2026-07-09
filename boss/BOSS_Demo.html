@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOSS — Bank Operations & Strategy System | Catalyst-DNA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif; }
+  button { font-family: inherit; }
+  input  { font-family: inherit; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #F1F5F9; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+// ─── PALETTE ────────────────────────────────────────────────
+const BG   = "#F8FAFC";
+const CARD = "#FFFFFF";
+const SIDE = "#0F172A";
+const INK  = "#0F172A";
+const MID  = "#475569";
+const LT   = "#94A3B8";
+const BLU  = "#3B82F6";
+const BLUD = "#1D4ED8";
+const BLUL = "#EFF6FF";
+const BLUB = "#BFDBFE";
+const GRN  = "#10B981";
+const GRNL = "#ECFDF5";
+const GRNB = "#6EE7B7";
+const AMB  = "#F59E0B";
+const AMBL = "#FFFBEB";
+const AMBB = "#FCD34D";
+const RED  = "#EF4444";
+const REDL = "#FEF2F2";
+const REDB = "#FCA5A5";
+const BDR  = "#E2E8F0";
+const RUL  = "#F1F5F9";
+
+// ─── PRIMITIVES ─────────────────────────────────────────────
+function Card({ children, style }) {
+  return (
+    <div style={{ background: CARD, border: `1px solid ${BDR}`, borderRadius: 8, padding: "18px 22px", ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function SL({ children, style }) {
+  return (
+    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: LT, marginBottom: 12, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function Dot({ status }) {
+  const c = status === "green" ? GRN : status === "amber" ? AMB : RED;
+  return <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: c, marginRight: 6, flexShrink: 0 }} />;
+}
+
+function Badge({ label, color }) {
+  const colors = {
+    blue:  [BLUL, BLU],
+    green: [GRNL, GRN],
+    amber: [AMBL, AMB],
+    red:   [REDL, RED],
+    gray:  [RUL,  LT],
+  };
+  const [bg, fg] = colors[color] || colors.blue;
+  return (
+    <span style={{ background: bg, color: fg, fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", padding: "2px 8px", borderRadius: 4, textTransform: "uppercase" }}>
+      {label}
+    </span>
+  );
+}
+
+function Th({ children }) {
+  return <th style={{ fontSize: 10, fontWeight: 700, color: LT, textAlign: "left", padding: "0 10px 8px 0", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{children}</th>;
+}
+
+function Td({ children, bold, color, style }) {
+  return <td style={{ fontSize: 12, fontWeight: bold ? 700 : 400, color: color || (bold ? INK : MID), padding: "8px 10px 8px 0", whiteSpace: "nowrap", ...style }}>{children}</td>;
+}
+
+function DraftBadge() {
+  return <div style={{ marginTop: 10, padding: "7px 12px", background: AMBL, border: `1px solid ${AMBB}`, borderRadius: 6, fontSize: 11, color: "#92400E" }}>⬤ AI Draft — CFO review and edit required before publication</div>;
+}
+
+function CommentBox({ children, color }) {
+  const c = color || BLU;
+  return <div style={{ fontSize: 12, color: MID, lineHeight: 1.8, borderLeft: `3px solid ${c}`, paddingLeft: 12 }}>{children}</div>;
+}
+
+function NimSparkline({ data }) {
+  const max = 3.80, min = 3.25, range = max - min;
+  const w = 480, h = 100, pad = 20;
+  const pts = data.map((d, i) => {
+    const x = pad + (i / (data.length - 1)) * (w - 2 * pad);
+    const y = h - pad - ((d.nim - min) / range) * (h - 2 * pad);
+    return `${x},${y}`;
+  });
+  const floorY = h - pad - ((3.25 - min) / range) * (h - 2 * pad);
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: 100 }}>
+      <line x1={pad} y1={floorY} x2={w - pad} y2={floorY} stroke={RED} strokeWidth={1} strokeDasharray="6 3" />
+      <text x={w - pad + 4} y={floorY + 4} fontSize={9} fill={RED}>Floor</text>
+      <polyline points={pts.join(" ")} fill="none" stroke={BLU} strokeWidth={2.5} strokeLinejoin="round" />
+      {data.map((d, i) => {
+        const x = pad + (i / (data.length - 1)) * (w - 2 * pad);
+        const y = h - pad - ((d.nim - min) / range) * (h - 2 * pad);
+        return (
+          <g key={i}>
+            <circle cx={x} cy={y} r={4} fill={BLU} />
+            <text x={x} y={y - 8} fontSize={9} fill={LT} textAnchor="middle">{d.mo}</text>
+            <text x={x} y={y + 18} fontSize={9} fill={MID} textAnchor="middle">{d.nim.toFixed(2)}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function CdBar({ data }) {
+  const maxV = Math.max(...data.map(d => d.v));
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 120, padding: "8px 0" }}>
+      {data.map((d, i) => (
+        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+          <div style={{ fontSize: 9, color: MID, fontWeight: 600 }}>${d.v}M</div>
+          <div style={{ width: "100%", background: BLU, borderRadius: "3px 3px 0 0", height: `${(d.v / maxV) * 80}px`, opacity: 0.8 + (i * 0.03) }} />
+          <div style={{ fontSize: 9, color: LT, textAlign: "center", lineHeight: 1.2 }}>{d.b}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── DATA ───────────────────────────────────────────────────
+const BANK = { name: "Meridian Community Bank, N.A.", assets: "$2.1B", hq: "Columbus, OH" };
+
+const NIM_TREND = [
+  { mo: "Oct", nim: 3.71 }, { mo: "Nov", nim: 3.66 }, { mo: "Dec", nim: 3.61 },
+  { mo: "Jan", nim: 3.58 }, { mo: "Feb", nim: 3.54 }, { mo: "Mar", nim: 3.50 }, { mo: "Apr", nim: 3.42 },
+];
+
+const CD_LADDER = [
+  { b: "0-30d", v: 38.2 }, { b: "31-60d", v: 52.4 }, { b: "61-90d", v: 44.1 },
+  { b: "91-180d", v: 112.6 }, { b: "181-365d", v: 186.3 }, { b: "1-2yr", v: 97.8 },
+];
+
+const IRR_ROWS = [
+  { shock: "-200 bps", nii12: "+3.4%", nii24: "+5.1%", eve: "+8.2%", breach: false },
+  { shock: "-100 bps", nii12: "+1.8%", nii24: "+2.6%", eve: "+3.9%", breach: false },
+  { shock: "Base",     nii12: "--",    nii24: "--",    eve: "--",    breach: false, base: true },
+  { shock: "+100 bps", nii12: "-1.9%", nii24: "-2.4%", eve: "-4.1%", breach: false },
+  { shock: "+200 bps", nii12: "-4.2%", nii24: "-5.8%", eve: "-8.6%", breach: false },
+  { shock: "+300 bps", nii12: "-6.8%", nii24: "-9.1%", eve: "-12.4%", breach: false },
+  { shock: "+400 bps", nii12: "-9.1%", nii24: "-12.3%", eve: "-16.8%", breach: true },
+];
+
+const POLICY_LIMITS = [
+  { m: "NIM",                  v: "3.42%",   l: ">= 3.25%", s: "amber" },
+  { m: "Cost of Funds",        v: "2.18%",   l: "<= 2.50%", s: "green" },
+  { m: "NIB DDA %",            v: "24.1%",   l: ">= 20%",   s: "amber" },
+  { m: "Uninsured Deposits",   v: "38.0%",   l: "<= 42%",   s: "green" },
+  { m: "NII at Risk +200",     v: "-4.2%",   l: ">= -8%",   s: "green" },
+  { m: "NII at Risk +400",     v: "-9.1%",   l: ">= -10%",  s: "amber" },
+  { m: "EVE at Risk +400",     v: "-16.8%",  l: ">= -15%",  s: "red"   },
+  { m: "LCR",                  v: "142%",    l: ">= 110%",  s: "green" },
+  { m: "Loan/Deposit Ratio",   v: "82.4%",   l: "<= 90%",   s: "green" },
+  { m: "CRE / RBC",            v: "271%",    l: "<= 285%",  s: "amber" },
+  { m: "CET1 Ratio",           v: "12.4%",   l: ">= 10.5%", s: "green" },
+  { m: "Top-10 Depositor",     v: "18.2%",   l: "<= 25%",   s: "green" },
+];
+
+const INVESTMENTS = [
+  { t: "Agency MBS",       book: 142.4, fair: 128.6, yield: "2.84%", dur: 4.2, aoci: -13.8 },
+  { t: "Municipal Bonds",  book: 88.2,  fair: 81.4,  yield: "3.12%", dur: 6.8, aoci: -6.8  },
+  { t: "Agency CMO",       book: 64.1,  fair: 58.9,  yield: "2.61%", dur: 3.4, aoci: -5.2  },
+  { t: "SBA Securities",   book: 28.6,  fair: 27.1,  yield: "5.42%", dur: 1.8, aoci: -1.5  },
+  { t: "Corp Bonds (IG)",  book: 22.0,  fair: 20.4,  yield: "3.88%", dur: 2.9, aoci: -1.6  },
+  { t: "TOTAL",            book: 345.3, fair: 316.4, yield: "3.04%", dur: 4.4, aoci: -28.9 },
+];
+
+const FHLB = [
+  { term: "Overnight",    bal: 25.0,  rate: "4.95%", mat: "Daily"         },
+  { term: "30-Day",       bal: 40.0,  rate: "4.92%", mat: "May 22, 2025"  },
+  { term: "90-Day",       bal: 60.0,  rate: "4.88%", mat: "Jul 21, 2025"  },
+  { term: "6-Month",      bal: 50.0,  rate: "4.74%", mat: "Oct 22, 2025"  },
+  { term: "1-Year Fixed", bal: 75.0,  rate: "4.48%", mat: "Apr 22, 2026"  },
+  { term: "3-Year Fixed", bal: 30.0,  rate: "3.82%", mat: "Apr 22, 2027"  },
+  { term: "TOTAL",        bal: 280.0, rate: "4.66% avg", mat: ""          },
+];
+
+const OPPORTUNITIES = [
+  { id: "OPP-018", src: "CEO Direct",    date: "Apr 24", score: 4.7, tier: "ExCo",     status: "Under Review",        title: "Acquisition: First Community Bancorp, Marion OH — $182M assets", rationale: "Contiguous market; 4 branches; strong agricultural loan book. Would bring total assets to ~$2.3B. Timing aligned with capital plan surplus.", dims: { strategic: 5, revenue: 4, timing: 5, relationship: 4 } },
+  { id: "OPP-017", src: "Commercial RM", date: "Apr 22", score: 4.2, tier: "ExCo",     status: "Proposal Prep",       title: "Treasury RFP — City of Westerville, $48M operating accounts", rationale: "City holds $48M at KeyBank. RFP closes May 15. Strong relationship with City Treasurer via Chamber. Estimated NIB DDA impact: +$22M.", dims: { strategic: 4, revenue: 5, timing: 4, relationship: 4 } },
+  { id: "OPP-016", src: "Inbound",       date: "Apr 21", score: 3.8, tier: "CoS Queue", status: "Info Gathering",      title: "CDFI certification — OCC pre-application meeting requested", rationale: "Unlocks $2-5M in grant capital and CRA credit. Pre-application meeting is low-commitment. Primary cost is staff time.", dims: { strategic: 4, revenue: 3, timing: 4, relationship: 3 } },
+  { id: "OPP-015", src: "RM Referral",   date: "Apr 18", score: 3.1, tier: "CoS Queue", status: "Initial Review",      title: "SMB payments partnership — Arcos Fintech, Columbus OH", rationale: "Early-stage fintech seeking bank partner. Revenue share at 15 bps. BSA due diligence required before progressing.", dims: { strategic: 3, revenue: 3, timing: 3, relationship: 3 } },
+  { id: "OPP-014", src: "Inbound",       date: "Apr 15", score: 2.6, tier: "CoS Queue", status: "Pending Response",    title: "ICBA LIVE 2026 — AI in Community Banking speaking panel", rationale: "Visibility opportunity aligned with AI strategy. 2026 conference — low time urgency.", dims: { strategic: 3, revenue: 1, timing: 3, relationship: 3 } },
+  { id: "OPP-013", src: "Inbound",       date: "Apr 12", score: 1.4, tier: "Decline",   status: "Decline Draft Ready", title: "Chamber gala sponsorship — $5,000 table", rationale: "Routine sponsorship; no strategic differentiation. Polite decline drafted.", dims: { strategic: 1, revenue: 1, timing: 2, relationship: 2 } },
+];
+
+const EVP_ROUNDTABLE = [
+  { name: "Tom Reilly",   role: "EVP Commercial Banking",   submitted: "Sat 8:42 AM",  color: BLU,  wins: "Closed $4.2M C&I credit to Meridian Industrial — largest commercial deal YTD. Pipeline at $125M approved/committed.",           risks: "Two CRE credits showing early covenant pressure (LTV near 70%). Flagged for May CREDCO.",                                      decisions: "Need ALCO approval on commercial loan floor today. Clarity needed on CRE headroom before May originations." },
+  { name: "Lisa Park",    role: "EVP Retail & Deposits",    submitted: "Sat 9:15 AM",  color: GRN,  wins: "Digital account opens up 22% MoM from pilot branch. NPS at 74.",                                                                 risks: "NIB DDA migration accelerating. CD retention rate 68% on April maturities vs. 80% target.",                                     decisions: "ALCO approval on CD ceiling critical today — without it, May maturities will see significant runoff." },
+  { name: "Marcus Webb",  role: "EVP Chief Financial Officer", submitted: "Sat 7:58 AM", color: AMB, wins: "CET1 stable at 12.4%. Q1 regulatory reporting completed ahead of schedule.",                                                    risks: "NIM at 3.42% trending toward policy floor. EVE breach at +400 bps — Baker Group review underway.",                              decisions: "ALCO to vote on CD ceiling, loan floor, and $50M FHLB advance. Baker Group call needed by April 30." },
+  { name: "Janet Torres", role: "EVP Chief Operating Officer", submitted: "Sat 11:22 AM", color: "#8B5CF6", wins: "Digital account opening pilot on track. IT confirmed Q2 capacity for full 12-branch rollout.",                          risks: "Core system upgrade Q3 — vendor resource availability uncertain. ExCo sponsor not yet assigned.",                                decisions: "Request ExCo sponsor assignment for Q3 core upgrade project today." },
+  { name: "David Chen",   role: "EVP Chief Credit Officer", submitted: "Sun 6:14 AM",  color: RED,  wins: "Net charge-offs at 0.08% YTD vs. 0.14% peer median. Watch-list credits stable at 12.",                                         risks: "Office CRE softness — 3 credits under enhanced monitoring.",                                                                     decisions: "Recommend holding CRE limit at 285% with enhanced quarterly review. No expansion." },
+];
+
+const REG_HORIZON = [
+  { id: "RH-041", date: "Apr 23", source: "OCC",   cat: "Model Risk",     priority: "high",   headline: "OCC Bulletin 2025-26: Model Risk for Community Banks",               note: "OCC clarified SR 11-7 applies proportionally to community banks. AI-generated committee prep materials may qualify as models. Review your AI governance documentation." },
+  { id: "RH-040", date: "Apr 21", source: "FDIC",  cat: "Deposits",       priority: "medium", headline: "FIL-22-2025: Updated Deposit Account Classification Guidance",       note: "Clarifies sweep account treatment for insurance coverage. Relevant to your NIB DDA categorisation. Legal should review deposit account agreement templates." },
+  { id: "RH-039", date: "Apr 18", source: "FinCEN",cat: "BSA/AML",        priority: "medium", headline: "Advisory FIN-2025-A002: Crypto Asset Risks for Community Banks",    note: "Indirect crypto exposure via business customers. Review commercial loan portfolio for crypto-adjacent businesses. Enhanced due diligence may be warranted." },
+];
+
+const INITIATIVES = [
+  { name: "Digital Account Opening — Branch Rollout", owner: "COO",      status: "green", phase: "Pilot (3 branches)",  due: "Jun 30", progress: 35,  update: "Pilot ahead of schedule. NPS 74. IT confirmed Q2 capacity for full rollout." },
+  { name: "ALCO Pre-Read Automation (BOSS Phase 1)",  owner: "CFO / CoS", status: "green", phase: "Live — 3rd month",   due: "Ongoing", progress: 100, update: "Third consecutive automated pre-read. CFO confirmed 18 hrs saved in April." },
+  { name: "CRE Portfolio Stress Review",              owner: "CCO",      status: "amber", phase: "In Progress",         due: "May 15", progress: 60,  update: "3 of 5 credits reviewed. Two added to enhanced monitoring. Final report May 15." },
+  { name: "Core System Upgrade (Q3)",                 owner: "COO",      status: "red",   phase: "Planning",            due: "Sep 30", progress: 15,  update: "Vendor resource uncertain. ExCo sponsor not yet assigned. Timeline at risk." },
+];
+
+const DECISIONS = [
+  { id: "D-2025-041", committee: "ALCO",   date: "Apr 22, 2025", owner: "CFO",       status: "Active", title: "CD special rate ceiling raised to 4.75% for 12-month term",                    audience: ["Front Line", "Branch Managers"], rationale: "Competitor rate pressure; uninsured deposits at 38%, within 42% limit." },
+  { id: "D-2025-040", committee: "ALCO",   date: "Apr 22, 2025", owner: "CFO",       status: "Active", title: "Commercial loan floating rate floor set at SOFR + 200 bps (min 6.75%)",        audience: ["Lenders", "Commercial RMs"],     rationale: "NIM compressed 8 bps MoM; floor protects yield on new originations." },
+  { id: "D-2025-039", committee: "CREDCO", date: "Apr 15, 2025", owner: "CCO",       status: "Active", title: "CRE concentration limit held at 285% of risk-based capital; quarterly review", audience: ["Lenders", "Credit Officers"],    rationale: "Portfolio at 271% of RBC; DSCR avg 1.32x. Board reaffirmed limit." },
+  { id: "D-2025-038", committee: "Board",  date: "Apr 8, 2025",  owner: "CEO",       status: "Active", title: "Capital plan: target CET1 ratio >= 11.5% through Q4 2025",                    audience: ["ExCo", "CFO"],                   rationale: "Stress scenario presented by CFO; board approved conservative capital posture." },
+  { id: "D-2025-037", committee: "ExCo",   date: "Apr 7, 2025",  owner: "CEO",       status: "Closed", title: "Q2 digital account opening pilot — 3 branches, 60-day window",                audience: ["COO", "Branch Managers"],        rationale: "Competitive gap in new account acquisition; IT confirmed for Q2." },
+  { id: "D-2025-036", committee: "BSA",    date: "Apr 1, 2025",  owner: "BSA Officer",status: "Active", title: "Enhanced due diligence threshold lowered to $8,000 in 3 zip codes",            audience: ["BSA Team", "Branch Managers"],   rationale: "FinCEN advisory FIN-2025-A001 on structuring patterns in similar markets." },
+];
+
+// ─── ALCO SCREENS ───────────────────────────────────────────
+const ALCO_TABS = ["Executive Summary","Rate Environment","Balance Sheet","NIM & Earnings","Interest Rate Risk","Liquidity","Deposit Analysis","Investment Portfolio","Loan Pipeline","FHLB & Wholesale","Capital & Policy","Recommendations"];
+
+function AlcoExecutiveSummary({ approved }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ background: BLUL, border: `1px solid ${BLUB}`, borderRadius: 8, padding: "14px 18px", fontSize: 13, color: BLUD, lineHeight: 1.7 }}>
+        <strong>CFO Summary — April 22, 2025:</strong> NIM compressed 8 bps MoM to 3.42%, driven by deposit repricing. <strong>One policy breach: EVE at +400 bps at -16.8% vs. -15% floor</strong> — Baker Group engaged. Recommend: approve CD ceiling to 4.75% and commercial loan floor at 6.75%.
+        {approved && <span style={{ marginLeft: 8, color: GRN, fontWeight: 700 }}>  ✓ CFO Approved</span>}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+        {[
+          { l: "Total Assets", v: "$2.13B", d: "+$18M", ok: true },
+          { l: "Net Interest Margin", v: "3.42%", d: "-8 bps MoM", ok: false },
+          { l: "Cost of Funds", v: "2.18%", d: "+14 bps MoM", ok: false },
+          { l: "LCR", v: "142%", d: "+400 bps", ok: true },
+          { l: "CET1 Ratio", v: "12.4%", d: "-20 bps", ok: true },
+          { l: "Loan / Deposit", v: "82.4%", d: "+60 bps", ok: true },
+          { l: "AOCI (AFS)", v: "-$28.9M", d: "-$2.1M", ok: false },
+          { l: "NII at Risk +200", v: "-4.2%", d: "Within limit", ok: true },
+        ].map((x, i) => (
+          <Card key={i} style={{ padding: "12px 14px", borderTop: `3px solid ${x.ok ? GRN : AMB}` }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: INK }}>{x.v}</div>
+            <div style={{ fontSize: 11, color: LT, marginTop: 2 }}>{x.l}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: x.ok ? GRN : AMB, marginTop: 3 }}>{x.d}</div>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <SL>Policy compliance — all limits</SL>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+          {POLICY_LIMITS.map((p, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${RUL}`, background: p.s === "red" ? REDL : "transparent" }}>
+              <Dot status={p.s} /><span style={{ fontSize: 11, color: p.s === "red" ? RED : MID }}>{p.m}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 10, padding: "8px 12px", background: REDL, border: `1px solid ${REDB}`, borderRadius: 6, fontSize: 12, color: RED, fontWeight: 600 }}>
+          BREACH: EVE at Risk +400 bps = -16.8% vs. policy floor of -15%. Baker Group model review in progress.
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function AlcoRateEnvironment() {
+  const rates = [
+    ["Fed Funds Target", "4.25-4.50%", "4.25-4.50%", "Unchanged"],
+    ["SOFR (30-day avg)", "4.31%", "4.33%", "-2 bps"],
+    ["2-Year Treasury", "4.82%", "4.71%", "+11 bps"],
+    ["10-Year Treasury", "4.68%", "4.57%", "+11 bps"],
+    ["2s10s Spread", "-14 bps", "-25 bps", "+11 bps"],
+    ["Prime Rate", "7.50%", "7.50%", "Unchanged"],
+    ["FHLB 3M Advance", "4.95%", "4.98%", "-3 bps"],
+    ["FHLB 1Y Advance", "4.72%", "4.69%", "+3 bps"],
+  ];
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <Card>
+        <SL>Market rates — April 22, 2025</SL>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr style={{ borderBottom: `2px solid ${BDR}` }}><Th>Rate</Th><Th>Current</Th><Th>Prior Mo.</Th><Th>Change</Th></tr></thead>
+          <tbody>
+            {rates.map((r, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${RUL}` }}>
+                <Td bold>{r[0]}</Td><Td>{r[1]}</Td><Td>{r[2]}</Td>
+                <Td color={r[3] === "Unchanged" ? LT : r[3].startsWith("+") ? RED : GRN}>{r[3]}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+      <Card>
+        <SL>Rate environment — CFO commentary</SL>
+        <CommentBox color={BLU}>
+          The Fed held at 4.25-4.50% at its March meeting. Market is pricing 2 cuts by year-end; 2s10s inversion narrowed to -14 bps. SOFR 30-day average at 4.31% drives floating-rate commercial loan repricing. FHLB advance costs remain below mid-2024 peak; 1-year advance at 4.72% offers a defensive funding option if deposit outflows accelerate.
+        </CommentBox>
+        <DraftBadge />
+      </Card>
+    </div>
+  );
+}
+
+function AlcoBalanceSheet() {
+  const assets = [
+    ["Cash & Equivalents", "$84.2", "3.9%", "+$4.1M"],
+    ["AFS Securities", "$316.4", "14.8%", "-$3.2M"],
+    ["HTM Securities", "$28.9", "1.4%", "--"],
+    ["Loans, net", "$1,568.4", "73.5%", "+$22.8M"],
+    ["  Comm. Real Estate", "$641.2", "30.1%", "+$8.4M"],
+    ["  C&I / LOC", "$312.6", "14.7%", "+$6.2M"],
+    ["  Residential Mtg", "$386.4", "18.1%", "+$5.8M"],
+    ["  Construction", "$142.8", "6.7%", "+$2.4M"],
+    ["  Consumer", "$85.4", "4.0%", "--"],
+    ["Other Assets", "$135.0", "6.3%", "+$1.8M"],
+    ["TOTAL ASSETS", "$2,132.9", "100%", "+$25.5M"],
+  ];
+  const liab = [
+    ["Total Deposits", "$1,902.4", "89.2%", "+$14.2M"],
+    ["  NIB DDA", "$458.5", "21.5%", "-$8.2M"],
+    ["  IB Demand", "$414.4", "19.4%", "-$2.4M"],
+    ["  Savings", "$330.8", "15.5%", "+$1.8M"],
+    ["  Money Market", "$302.3", "14.2%", "+$4.6M"],
+    ["  CDs (retail)", "$396.4", "18.6%", "+$18.4M"],
+    ["FHLB Advances", "$280.0", "13.1%", "+$15.0M"],
+    ["Sub. Debt & Other", "$51.8", "2.4%", "+$1.2M"],
+    ["Total Equity", "$149.7", "7.0%", "+$2.1M"],
+    ["TOTAL L + EQUITY", "$2,132.9", "100%", "+$25.5M"],
+  ];
+  const isTotalRow = (label) => label.startsWith("TOTAL");
+  const isSubRow = (label) => label.startsWith("  ");
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <Card>
+        <SL>Assets ($M) — April 30, 2025</SL>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr style={{ borderBottom: `2px solid ${BDR}` }}><Th>Category</Th><Th>Balance</Th><Th>% Assets</Th><Th>MoM</Th></tr></thead>
+          <tbody>
+            {assets.map((r, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${RUL}`, background: isTotalRow(r[0]) ? BLUL : isSubRow(r[0]) ? RUL : CARD }}>
+                <Td bold={isTotalRow(r[0])}>{r[0]}</Td><Td bold={isTotalRow(r[0])}>{r[1]}</Td><Td>{r[2]}</Td>
+                <Td color={r[3] === "--" ? LT : r[3].startsWith("+") ? GRN : RED}>{r[3]}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+      <Card>
+        <SL>Liabilities & Capital ($M)</SL>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr style={{ borderBottom: `2px solid ${BDR}` }}><Th>Category</Th><Th>Balance</Th><Th>% L+E</Th><Th>MoM</Th></tr></thead>
+          <tbody>
+            {liab.map((r, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${RUL}`, background: isTotalRow(r[0]) ? BLUL : isSubRow(r[0]) ? RUL : CARD }}>
+                <Td bold={isTotalRow(r[0])}>{r[0]}</Td><Td bold={isTotalRow(r[0])}>{r[1]}</Td><Td>{r[2]}</Td>
+                <Td color={r[3] === "--" ? LT : r[3].startsWith("+") ? GRN : RED}>{r[3]}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+function AlcoNimEarnings() {
+  const bridge = [
+    { l: "March NIM", v: "3.50%", c: MID },
+    { l: "Loan yield (stable)", v: "+0 bps", c: LT },
+    { l: "CD repricing", v: "-6 bps", c: RED },
+    { l: "NIB DDA migration", v: "-2 bps", c: RED },
+    { l: "FHLB cost increase", v: "-1 bp", c: AMB },
+    { l: "Loan mix shift", v: "+1 bp", c: GRN },
+    { l: "April NIM", v: "3.42%", c: INK },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+        <Card>
+          <SL>Net Interest Margin — 7-month trend</SL>
+          <NimSparkline data={NIM_TREND} />
+          <div style={{ fontSize: 11, color: LT, marginTop: 4 }}>Red dashed line = 3.25% policy floor</div>
+        </Card>
+        <Card>
+          <SL>NIM bridge: Mar to Apr</SL>
+          {bridge.map((r, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < bridge.length - 1 ? `1px solid ${RUL}` : `2px solid ${BDR}` }}>
+              <span style={{ fontSize: 11, color: r.c, fontWeight: i === 0 || i === bridge.length - 1 ? 700 : 400 }}>{r.l}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: r.c }}>{r.v}</span>
+            </div>
+          ))}
+        </Card>
+      </div>
+      <Card>
+        <SL>NIM & earnings — CFO commentary</SL>
+        <CommentBox color={AMB}>
+          NIM compressed 8 bps in April to 3.42%, driven by $48M in CD maturities repricing 45-60 bps higher and continued NIB DDA migration. At the current rate, NIM could approach the 3.25% policy floor within 6-7 months without intervention. <strong>Recommended:</strong> approve CD ceiling at 4.75%; enforce commercial loan floor at SOFR + 200 bps; consider a $25-50M CD special at 4.60% to recapture outflows.
+        </CommentBox>
+        <DraftBadge />
+      </Card>
+    </div>
+  );
+}
+
+function AlcoIRR() {
+  const niiColor = (v) => { if (v === "--") return LT; return v.startsWith("+") ? GRN : v.startsWith("-9") || v.startsWith("-1") ? RED : AMB; };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <SL style={{ marginBottom: 0 }}>NII at Risk & EVE Sensitivity — Baker Group, April 2025</SL>
+          <span style={{ fontSize: 10, background: REDL, color: RED, fontWeight: 700, padding: "2px 8px", borderRadius: 4, border: `1px solid ${REDB}` }}>1 POLICY BREACH</span>
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ borderBottom: `2px solid ${BDR}` }}>
+              <Th>Rate Shock</Th><Th>NII Yr 1</Th><Th>NII Yr 2</Th><Th>NII Limit</Th><Th>EVE</Th><Th>EVE Limit</Th><Th>Status</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {IRR_ROWS.map((r, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${RUL}`, background: r.breach ? REDL : r.base ? RUL : CARD }}>
+                <Td bold>{r.shock}</Td>
+                <Td color={niiColor(r.nii12)}>{r.nii12}</Td>
+                <Td color={niiColor(r.nii24)}>{r.nii24}</Td>
+                <Td>{r.base ? "" : r.shock === "+400 bps" ? ">= -10%" : r.shock.startsWith("-") ? ">= -8%" : ">= -8%"}</Td>
+                <Td color={r.eve === "--" ? LT : r.breach ? RED : r.eve.startsWith("-1") ? AMB : GRN}>{r.eve}</Td>
+                <Td>{r.base ? "" : ">= -15%"}</Td>
+                <td style={{ padding: "8px 0" }}>{r.base ? null : r.breach ? <span style={{ color: RED, fontWeight: 700, fontSize: 11 }}>BREACH</span> : <Dot status="green" />}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ marginTop: 12, padding: "10px 14px", background: REDL, border: `1px solid ${REDB}`, borderRadius: 6, fontSize: 12, color: RED }}>
+          <strong>Action required:</strong> EVE at +400 bps of -16.8% exceeds -15.0% policy floor. Baker Group preliminary assessment: breach is model-assumption-driven (MBS prepayment speeds). No immediate balance sheet action. Re-present at May ALCO.
+        </div>
+      </Card>
+      <Card>
+        <SL>IRR commentary — CFO draft</SL>
+        <CommentBox color={RED}>
+          The bank remains asset-sensitive in the near term with all NII scenarios through +300 bps within policy. The EVE breach at +400 bps is the primary concern. Baker Group attributes approximately 80% of the variance to stale MBS prepayment assumptions. A model update is expected to bring EVE back within policy. Every 25 bps increase in the commercial loan floor reduces NII-at-risk by approximately 8 bps annually.
+        </CommentBox>
+        <DraftBadge />
+      </Card>
+    </div>
+  );
+}
+
+function AlcoLiquidity() {
+  const sources = [
+    ["Cash & Fed Funds", "$84.2M", "--", "$84.2M"],
+    ["Unpledged Securities", "$112.4M", "--", "$112.4M"],
+    ["FHLB Capacity", "$420.0M", "$280.0M", "$140.0M"],
+    ["Fed Discount Window", "$85.0M", "--", "$85.0M"],
+    ["Brokered CD Facility", "$50.0M", "--", "$50.0M"],
+    ["Correspondent Lines", "$25.0M", "--", "$25.0M"],
+    ["TOTAL", "$776.6M", "$280.0M", "$496.6M"],
+  ];
+  const ratios = [
+    { l: "Liquidity Coverage Ratio", v: "142%",   lim: ">= 110%", s: "green" },
+    { l: "Loans / Deposits",         v: "82.4%",  lim: "<= 90%",  s: "green" },
+    { l: "Wholesale Funding / Assets",v: "13.1%",  lim: "<= 20%",  s: "green" },
+    { l: "Uninsured Deposits",        v: "38.0%",  lim: "<= 42%",  s: "green" },
+    { l: "Top-10 Depositor Conc.",    v: "18.2%",  lim: "<= 25%",  s: "green" },
+    { l: "30-Day Net Funding Gap",    v: "-$12.8M", lim: ">= -$50M",s: "green" },
+  ];
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <Card>
+        <SL>Available liquidity sources ($M)</SL>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr style={{ borderBottom: `2px solid ${BDR}` }}><Th>Source</Th><Th>Capacity</Th><Th>Drawn</Th><Th>Available</Th></tr></thead>
+          <tbody>
+            {sources.map((r, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${RUL}`, background: r[0] === "TOTAL" ? BLUL : CARD }}>
+                <Td bold={r[0] === "TOTAL"}>{r[0]}</Td><Td>{r[1]}</Td><Td>{r[2]}</Td>
+                <Td bold={r[0] === "TOTAL"} color={GRN}>{r[3]}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+      <Card>
+        <SL>Key ratios vs. policy limits</SL>
+        {ratios.map((r, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < ratios.length - 1 ? `1px solid ${RUL}` : "none" }}>
+            <div style={{ display: "flex", alignItems: "center" }}><Dot status={r.s} /><span style={{ fontSize: 12, color: MID }}>{r.l}</span></div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>{r.v}</div>
+              <div style={{ fontSize: 10, color: LT }}>{r.lim}</div>
+            </div>
+          </div>
+        ))}
+      </Card>
+    </div>
+  );
+}
+
+function AlcoDeposits() {
+  const mix = [
+    ["NIB DDA",      "$458.5M", "24.1%", "0.00%", "-$8.2M"],
+    ["IB Demand",    "$414.4M", "21.8%", "0.42%", "-$2.4M"],
+    ["Savings",      "$330.8M", "17.4%", "0.18%", "+$1.8M"],
+    ["Money Market", "$302.3M", "15.9%", "1.84%", "+$4.6M"],
+    ["CDs (retail)", "$396.4M", "20.8%", "4.12%", "+$18.4M"],
+    ["TOTAL",        "$1,902.4M","100%", "2.18%", "+$14.2M"],
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <Card>
+          <SL>CD maturity ladder ($M)</SL>
+          <CdBar data={CD_LADDER} />
+          <div style={{ fontSize: 11, color: LT, marginTop: 8 }}>$90.6M maturing within 90 days at avg 4.12%. Repricing at market adds ~5-7 bps to CoF.</div>
+        </Card>
+        <Card>
+          <SL>Deposit mix by category</SL>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead><tr style={{ borderBottom: `2px solid ${BDR}` }}><Th>Category</Th><Th>Balance</Th><Th>Mix</Th><Th>Rate</Th><Th>MoM</Th></tr></thead>
+            <tbody>
+              {mix.map((r, i) => (
+                <tr key={i} style={{ borderBottom: `1px solid ${RUL}`, background: r[0] === "TOTAL" ? BLUL : CARD }}>
+                  <Td bold={r[0] === "TOTAL"}>{r[0]}</Td><Td>{r[1]}</Td><Td>{r[2]}</Td><Td>{r[3]}</Td>
+                  <Td color={r[4].startsWith("+") ? GRN : RED}>{r[4]}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <Card>
+        <SL>Deposit commentary — CFO draft</SL>
+        <CommentBox color={AMB}>
+          Total deposits grew $14.2M but mix deteriorated: NIB DDA fell $8.2M while retail CDs grew $18.4M. The NIB DDA ratio at 24.1% has declined 580 bps since October, materially increasing funding cost. <strong>Recommended:</strong> targeted CD retention campaign for the $90.6M maturing within 90 days; propose 4.60% special to retain volume below the 4.75% ceiling.
+        </CommentBox>
+        <DraftBadge />
+      </Card>
+    </div>
+  );
+}
+
+function AlcoInvestments() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card>
+        <SL>AFS Investment Portfolio — April 30, 2025</SL>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr style={{ borderBottom: `2px solid ${BDR}` }}><Th>Type</Th><Th>Book ($M)</Th><Th>Fair Value ($M)</Th><Th>Yield</Th><Th>Duration</Th><Th>AOCI ($M)</Th></tr></thead>
+          <tbody>
+            {INVESTMENTS.map((r, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${RUL}`, background: r.t === "TOTAL" ? BLUL : CARD }}>
+                <Td bold={r.t === "TOTAL"}>{r.t}</Td>
+                <Td bold={r.t === "TOTAL"}>${r.book.toFixed(1)}</Td>
+                <Td>${r.fair.toFixed(1)}</Td>
+                <Td>{r.yield}</Td>
+                <Td>{r.dur} yrs</Td>
+                <Td bold={r.t === "TOTAL"} color={RED}>${r.aoci.toFixed(1)}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ marginTop: 10, padding: "8px 12px", background: REDL, border: `1px solid ${REDB}`, borderRadius: 6, fontSize: 11, color: RED }}>
+          Total AOCI loss: -$28.9M (-$2.1M MoM). No impairment identified; all securities expected to be held to recovery or maturity.
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function AlcoLoanPipeline() {
+  const pipeline = [
+    { c: "Commercial RE",        a: 48.2, b: 22.4, d: 14.6, color: BLU  },
+    { c: "C&I / LOC",           a: 31.4, b: 18.2, d: 8.8,  color: GRN  },
+    { c: "Residential Mortgage", a: 22.8, b: 12.4, d: 6.2,  color: AMB  },
+    { c: "Construction",         a: 14.2, b: 6.8,  d: 4.4,  color: "#8B5CF6" },
+    { c: "Consumer",             a: 8.6,  b: 4.2,  d: 2.1,  color: LT   },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card>
+        <SL>Active loan pipeline — April 30, 2025 ($M)</SL>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr style={{ borderBottom: `2px solid ${BDR}` }}><Th>Category</Th><Th>Screening</Th><Th>Approved</Th><Th>Pre-Approved</Th><Th>Total</Th></tr></thead>
+          <tbody>
+            {pipeline.map((r, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${RUL}` }}>
+                <td style={{ fontSize: 12, fontWeight: 600, color: r.color, padding: "8px 10px 8px 0" }}>{r.c}</td>
+                <Td>${r.d.toFixed(1)}M</Td><Td>${r.b.toFixed(1)}M</Td><Td>${r.a.toFixed(1)}M</Td>
+                <Td bold>${(r.a + r.b + r.d).toFixed(1)}M</Td>
+              </tr>
+            ))}
+            <tr style={{ borderTop: `2px solid ${BDR}`, background: BLUL }}>
+              <Td bold>TOTAL</Td><Td bold>$36.1M</Td><Td bold>$64.0M</Td><Td bold>$125.2M</Td><Td bold>$225.3M</Td>
+            </tr>
+          </tbody>
+        </table>
+        <div style={{ marginTop: 12, fontSize: 12, color: MID }}>CRE pipeline of $85M vs. current portfolio of $641M. Full deployment brings CRE/RBC to ~279%, within the 285% limit.</div>
+      </Card>
+    </div>
+  );
+}
+
+function AlcoFhlb() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card>
+        <SL>FHLB advance schedule — April 30, 2025</SL>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr style={{ borderBottom: `2px solid ${BDR}` }}><Th>Term</Th><Th>Balance ($M)</Th><Th>Rate</Th><Th>Maturity</Th></tr></thead>
+          <tbody>
+            {FHLB.map((r, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${RUL}`, background: r.term === "TOTAL" ? BLUL : CARD }}>
+                <Td bold={r.term === "TOTAL"}>{r.term}</Td>
+                <Td bold={r.term === "TOTAL"}>${r.bal.toFixed(1)}M</Td>
+                <Td>{r.rate}</Td><Td>{r.mat}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ marginTop: 10, padding: "10px 14px", background: AMBL, border: `1px solid ${AMBB}`, borderRadius: 6, fontSize: 12, color: "#92400E" }}>
+          <strong>Note:</strong> $65M in overnight and 30-day advances mature within 30 days. Evaluate roll-forward vs. reduction given deposit growth. FHLB capacity: $420M total / $140M available.
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function AlcoCapital() {
+  const caps = [
+    { l: "CET1 Capital Ratio",       v: 12.4, min: 10.5 },
+    { l: "Tier 1 Leverage Ratio",    v: 9.8,  min: 8.0  },
+    { l: "Total Risk-Based Capital", v: 13.6, min: 12.0 },
+    { l: "TCE / Total Assets",       v: 8.2,  min: 7.0  },
+  ];
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <Card>
+        <SL>Regulatory capital ratios</SL>
+        {caps.map((r, i) => (
+          <div key={i} style={{ marginBottom: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: INK }}>{r.l}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: GRN }}>{r.v}%</span>
+            </div>
+            <div style={{ height: 8, background: RUL, borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${(r.v / 16) * 100}%`, background: BLU, borderRadius: 4 }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3 }}>
+              <span style={{ fontSize: 10, color: LT }}>Min: {r.min}%</span>
+              <span style={{ fontSize: 10, color: GRN }}>+{(r.v - r.min).toFixed(1)}% buffer</span>
+            </div>
+          </div>
+        ))}
+      </Card>
+      <Card>
+        <SL>All policy limits</SL>
+        {POLICY_LIMITS.map((p, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: `1px solid ${RUL}`, background: p.s === "red" ? REDL : "transparent" }}>
+            <div style={{ display: "flex", alignItems: "center" }}><Dot status={p.s} /><span style={{ fontSize: 11, color: p.s === "red" ? RED : MID }}>{p.m}</span></div>
+            <div style={{ textAlign: "right" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: p.s === "red" ? RED : p.s === "amber" ? AMB : INK }}>{p.v}</span>
+              <span style={{ fontSize: 10, color: LT, marginLeft: 6 }}>(lim: {p.l})</span>
+            </div>
+          </div>
+        ))}
+      </Card>
+    </div>
+  );
+}
+
+function AlcoRecommendations({ approved }) {
+  const recs = [
+    { n: 1, t: "Approve CD special ceiling increase to 4.75% (12-month)", p: "Vote Required", c: BLU, rationale: "NIB DDA migration accelerating. Estimated cost: +3-4 bps to CoF. Arrests $15-20M of potential NMD outflows.", action: "CFO to implement effective today. Branch and RM teams notified via same-day bulletin." },
+    { n: 2, t: "Set commercial floating rate floor at SOFR + 200 bps (min 6.75%)", p: "Vote Required", c: BLU, rationale: "Protects yield floor on new originations as NIM compresses. Benefit: +6-8 bps to loan yield over 12 months.", action: "CCO to update credit policy appendix. Lenders notified via same-day bulletin effective today." },
+    { n: 3, t: "Engage Baker Group to revise EVE model assumptions (+400 bps)", p: "Management Action", c: AMB, rationale: "EVE at +400 bps of -16.8% breaches -15% policy floor. Breach is model-assumption-driven. No immediate balance sheet action.", action: "Treasurer to schedule Baker Group call by April 30. Re-present at May ALCO." },
+    { n: 4, t: "Authorise $50M 1-year FHLB advance at 4.72% to fund loan growth", p: "Vote Required", c: BLU, rationale: "Pipeline of $125M needs funding. 1-year FHLB at 4.72% is more cost-effective than retail CDs.", action: "Treasurer to execute upon approval by April 30." },
+    { n: 5, t: "Initiate CD retention campaign for $90.6M maturing within 90 days", p: "Management Action", c: GRN, rationale: "Prevent uncontrolled runoff. Targeted 4.60% offer retains volume below the 4.75% ceiling.", action: "Retail team to contact top-50 CD relationships by April 30. Report retention rate at May ALCO." },
+  ];
+  const cbg = (c) => c === BLU ? BLUL : c === AMB ? AMBL : GRNL;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ padding: "12px 16px", background: BLUL, border: `1px solid ${BLUB}`, borderRadius: 8, fontSize: 13, color: BLUD, fontWeight: 600 }}>
+        April 22, 2025 ALCO — Recommended Actions for Vote
+        {approved && <span style={{ marginLeft: 10, color: GRN }}> ✓ CFO Approved — Bulletin dispatched 3:47 PM</span>}
+      </div>
+      {recs.map((r, i) => (
+        <Card key={i} style={{ borderLeft: `4px solid ${r.c}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <span style={{ background: r.c, color: "#fff", fontSize: 11, fontWeight: 700, borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{r.n}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: INK }}>{r.t}</span>
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 700, color: r.c, background: cbg(r.c), padding: "2px 8px", borderRadius: 4, whiteSpace: "nowrap" }}>{r.p}</span>
+          </div>
+          <div style={{ fontSize: 12, color: MID, marginBottom: 5, lineHeight: 1.6 }}><strong style={{ color: INK }}>Rationale:</strong> {r.rationale}</div>
+          <div style={{ fontSize: 12, color: MID, lineHeight: 1.6 }}><strong style={{ color: INK }}>Action:</strong> {r.action}</div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function AlcoScreen({ tab, approved }) {
+  if (tab === "Executive Summary")   return <AlcoExecutiveSummary approved={approved} />;
+  if (tab === "Rate Environment")    return <AlcoRateEnvironment />;
+  if (tab === "Balance Sheet")       return <AlcoBalanceSheet />;
+  if (tab === "NIM & Earnings")      return <AlcoNimEarnings />;
+  if (tab === "Interest Rate Risk")  return <AlcoIRR />;
+  if (tab === "Liquidity")           return <AlcoLiquidity />;
+  if (tab === "Deposit Analysis")    return <AlcoDeposits />;
+  if (tab === "Investment Portfolio")return <AlcoInvestments />;
+  if (tab === "Loan Pipeline")       return <AlcoLoanPipeline />;
+  if (tab === "FHLB & Wholesale")    return <AlcoFhlb />;
+  if (tab === "Capital & Policy")    return <AlcoCapital />;
+  if (tab === "Recommendations")     return <AlcoRecommendations approved={approved} />;
+  return null;
+}
+
+// ─── CEO PULSE ──────────────────────────────────────────────
+function CEOPulse() {
+  const [oppOpen, setOppOpen] = useState(null);
+  const [evpOpen, setEvpOpen] = useState(null);
+
+  const scoreColor = (s) => s >= 4.5 ? GRN : s >= 3.5 ? BLU : s >= 2.5 ? AMB : RED;
+  const tierColor  = (t) => t === "ExCo" ? BLU : t === "CoS Queue" ? AMB : LT;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: INK }}>CEO Pulse</div>
+          <div style={{ fontSize: 13, color: MID, marginTop: 2 }}>Monday, April 28, 2025 · Week 17 · ExCo in 45 min</div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ background: REDL, border: `1px solid ${REDB}`, borderRadius: 6, padding: "6px 12px", fontSize: 11, fontWeight: 700, color: RED }}>1 policy breach</div>
+          <div style={{ background: BLUL, border: `1px solid ${BLUB}`, borderRadius: 6, padding: "6px 12px", fontSize: 11, fontWeight: 600, color: BLUD }}>2 pre-reads ready</div>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+        {[
+          { l: "Decisions this week", v: "6", s: "3 committees", c: BLU },
+          { l: "Open action items",   v: "3", s: "2 due this week", c: AMB },
+          { l: "Opportunities",       v: "6", s: "2 need CEO attention", c: BLU },
+          { l: "Initiatives",         v: "4", s: "1 at risk", c: RED },
+          { l: "Regulatory items",    v: "3", s: "1 high-priority", c: AMB },
+        ].map((x, i) => (
+          <Card key={i} style={{ padding: "12px 14px", borderTop: `3px solid ${x.c}` }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: INK }}>{x.v}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: INK, marginTop: 1 }}>{x.l}</div>
+            <div style={{ fontSize: 10, color: LT, marginTop: 1 }}>{x.s}</div>
+          </Card>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Opportunity Register */}
+          <Card>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <SL style={{ marginBottom: 0 }}>CEO Opportunity Register</SL>
+              <span style={{ fontSize: 10, color: LT }}>Scored automatically · 2 routed to ExCo</span>
+            </div>
+            {OPPORTUNITIES.map((o, i) => (
+              <div key={i}>
+                <div onClick={() => setOppOpen(oppOpen === i ? null : i)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${RUL}`, cursor: "pointer" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 6, background: scoreColor(o.score) + "22", border: `1px solid ${scoreColor(o.score)}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: scoreColor(o.score) }}>{o.score}</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.title}</div>
+                    <div style={{ fontSize: 10, color: LT, marginTop: 2 }}>{o.id} · {o.src} · {o.date}</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: tierColor(o.tier), background: tierColor(o.tier) + "22", padding: "2px 8px", borderRadius: 4 }}>{o.tier}</span>
+                    <span style={{ fontSize: 10, color: LT, padding: "2px 8px", borderRadius: 4, background: RUL }}>{o.status}</span>
+                    <span style={{ fontSize: 10, color: LT }}>{oppOpen === i ? "▲" : "▼"}</span>
+                  </div>
+                </div>
+                {oppOpen === i && (
+                  <div style={{ padding: "12px 14px", background: RUL, borderRadius: 6, margin: "4px 0 8px" }}>
+                    <div style={{ fontSize: 12, color: MID, lineHeight: 1.65, marginBottom: 10 }}>{o.rationale}</div>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      {[
+                        { l: "Strategic (40%)",    v: o.dims.strategic    },
+                        { l: "Revenue (25%)",      v: o.dims.revenue      },
+                        { l: "Timing (20%)",       v: o.dims.timing       },
+                        { l: "Relationship (15%)", v: o.dims.relationship },
+                      ].map((d, j) => (
+                        <div key={j} style={{ flex: 1 }}>
+                          <div style={{ fontSize: 9, color: LT, marginBottom: 3 }}>{d.l}</div>
+                          <div style={{ height: 5, background: BDR, borderRadius: 3 }}>
+                            <div style={{ height: "100%", width: `${d.v * 20}%`, background: scoreColor(d.v), borderRadius: 3 }} />
+                          </div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: scoreColor(d.v), marginTop: 2 }}>{d.v}/5</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </Card>
+
+          {/* EVP Roundtable */}
+          <Card>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <SL style={{ marginBottom: 0 }}>EVP Roundtable — Pre-ExCo Submissions</SL>
+              <span style={{ fontSize: 10, background: GRNL, color: GRN, fontWeight: 700, padding: "2px 8px", borderRadius: 4 }}>5 of 5 submitted</span>
+            </div>
+            {EVP_ROUNDTABLE.map((e, i) => (
+              <div key={i}>
+                <div onClick={() => setEvpOpen(evpOpen === i ? null : i)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: `1px solid ${RUL}`, cursor: "pointer" }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: e.color + "22", border: `2px solid ${e.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: e.color, flexShrink: 0 }}>
+                    {e.name.split(" ").map((w) => w[0]).join("")}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: INK }}>{e.name}</div>
+                    <div style={{ fontSize: 10, color: LT }}>{e.role} · {e.submitted}</div>
+                  </div>
+                  <span style={{ fontSize: 10, color: LT }}>{evpOpen === i ? "▲" : "▼"}</span>
+                </div>
+                {evpOpen === i && (
+                  <div style={{ padding: "12px 14px", background: RUL, borderRadius: 6, margin: "4px 0 8px", display: "flex", flexDirection: "column", gap: 8 }}>
+                    {[
+                      { label: "Wins",             text: e.wins,      color: GRN },
+                      { label: "Risks",             text: e.risks,     color: RED },
+                      { label: "Decisions needed",  text: e.decisions, color: BLU },
+                    ].map((item, j) => (
+                      <div key={j} style={{ display: "flex", gap: 10 }}>
+                        <div style={{ width: 3, background: item.color, borderRadius: 2, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: item.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>{item.label}</div>
+                          <div style={{ fontSize: 12, color: MID, lineHeight: 1.55 }}>{item.text}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </Card>
+        </div>
+
+        {/* Right column */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <Card>
+            <SL>Strategic Initiatives</SL>
+            {INITIATIVES.map((x, i) => {
+              const statusColor = x.status === "green" ? GRN : x.status === "amber" ? AMB : RED;
+              return (
+                <div key={i} style={{ marginBottom: i < INITIATIVES.length - 1 ? 14 : 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: INK, lineHeight: 1.4, flex: 1, paddingRight: 8 }}>{x.name}</span>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: statusColor, flexShrink: 0, marginTop: 3, display: "inline-block" }} />
+                  </div>
+                  <div style={{ height: 4, background: RUL, borderRadius: 2, marginBottom: 4 }}>
+                    <div style={{ height: "100%", width: `${x.progress}%`, background: statusColor, borderRadius: 2 }} />
+                  </div>
+                  <div style={{ fontSize: 10, color: LT, marginBottom: 3 }}>{x.owner} · Due {x.due} · {x.phase}</div>
+                  <div style={{ fontSize: 11, color: MID, lineHeight: 1.5 }}>{x.update}</div>
+                  {i < INITIATIVES.length - 1 && <div style={{ height: 1, background: RUL, margin: "12px 0 0" }} />}
+                </div>
+              );
+            })}
+          </Card>
+
+          <Card>
+            <SL>Regulatory Horizon</SL>
+            {REG_HORIZON.map((r, i) => (
+              <div key={i} style={{ padding: "9px 0", borderBottom: i < REG_HORIZON.length - 1 ? `1px solid ${RUL}` : "none" }}>
+                <div style={{ display: "flex", gap: 6, marginBottom: 4 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: r.priority === "high" ? RED : AMB, background: r.priority === "high" ? REDL : AMBL, padding: "1px 6px", borderRadius: 3, textTransform: "uppercase" }}>{r.priority}</span>
+                  <span style={{ fontSize: 9, color: LT, background: RUL, padding: "1px 6px", borderRadius: 3 }}>{r.source}</span>
+                  <span style={{ fontSize: 9, color: LT }}>{r.date}</span>
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: INK, marginBottom: 4, lineHeight: 1.4 }}>{r.headline}</div>
+                <div style={{ fontSize: 11, color: MID, lineHeight: 1.55, borderLeft: `2px solid ${r.priority === "high" ? RED : AMB}`, paddingLeft: 8 }}>{r.note}</div>
+              </div>
+            ))}
+          </Card>
+
+          <Card>
+            <SL>This week's committees</SL>
+            {[
+              { n: "ExCo",         d: "Mon Apr 28, 8:00 AM", st: "Pre-read ready",  c: GRN, sub: "5 EVP submissions received" },
+              { n: "Loan Committee",d: "Wed Apr 30, 2:00 PM", st: "Pre-read ready",  c: GRN, sub: "$42M in credits to review"  },
+              { n: "BSA Review",    d: "Thu May 1, 10:00 AM", st: "Assembling",      c: AMB, sub: "2 items pending BSA Officer" },
+            ].map((c, i) => (
+              <div key={i} style={{ padding: "9px 0", borderBottom: i < 2 ? `1px solid ${RUL}` : "none" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: INK }}>{c.n}</div>
+                    <div style={{ fontSize: 10, color: LT, marginTop: 1 }}>{c.d}</div>
+                    <div style={{ fontSize: 10, color: MID, marginTop: 1 }}>{c.sub}</div>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: c.c }}>{c.st}</span>
+                </div>
+              </div>
+            ))}
+          </Card>
+
+          <Card>
+            <SL>Open action items</SL>
+            {[
+              { text: "IRR model review — present May ALCO", due: "Apr 30", owner: "Treasurer", urgent: true  },
+              { text: "Watch-list narrative — 4 credits",    due: "May 1",  owner: "CCO",       urgent: false },
+              { text: "Q1 capital summary for board",        due: "May 8",  owner: "CFO",       urgent: false },
+            ].map((a, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: i < 2 ? `1px solid ${RUL}` : "none" }}>
+                <div style={{ width: 3, background: a.urgent ? RED : AMB, borderRadius: 2, flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: INK }}>{a.text}</div>
+                  <div style={{ fontSize: 10, color: LT, marginTop: 1 }}>
+                    Due {a.due} · {a.owner}
+                    {a.urgent && <span style={{ color: RED, fontWeight: 700 }}> · Overdue</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── DECISION LOG ───────────────────────────────────────────
+function DecisionLog() {
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+
+  const filtered = DECISIONS.filter((d) => {
+    const matchSearch = d.title.toLowerCase().includes(search.toLowerCase()) || d.rationale.toLowerCase().includes(search.toLowerCase());
+    const matchFilter = filter === "All" || d.committee === filter;
+    return matchSearch && matchFilter;
+  });
+
+  const commColor = (c) => c === "ALCO" ? "blue" : c === "CREDCO" ? "amber" : c === "Board" ? "gray" : "green";
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: INK }}>Decision Log</div>
+          <div style={{ fontSize: 13, color: MID, marginTop: 2 }}>Every governance decision — indexed and retrievable</div>
+        </div>
+        <div style={{ fontSize: 12, color: LT }}>{DECISIONS.length} decisions · Updated 6 min ago</div>
+      </div>
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search decisions, rationale… (try: CRE)" style={{ flex: 1, padding: "9px 14px", border: `1px solid ${BDR}`, borderRadius: 7, fontSize: 13, color: INK, outline: "none", minWidth: 200 }} />
+        {["All", "ALCO", "CREDCO", "Board", "ExCo", "BSA"].map((f) => (
+          <button key={f} onClick={() => setFilter(f)} style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${filter === f ? BLU : BDR}`, background: filter === f ? BLUL : CARD, color: filter === f ? BLUD : MID, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{f}</button>
+        ))}
+      </div>
+
+      {search.toLowerCase().includes("cre") && (
+        <div style={{ background: GRNL, border: `1px solid ${GRNB}`, borderRadius: 8, padding: "12px 16px", fontSize: 12, color: "#065F46" }}>
+          <strong>Exam-ready in 30 seconds</strong> — CRE concentration decision D-2025-039 (Apr 15) found. Board rationale and limit confirmation available for examiner export.
+        </div>
+      )}
+
+      {filtered.map((d, i) => {
+        const bc = d.committee === "ALCO" ? BLU : d.committee === "CREDCO" ? AMB : d.committee === "Board" ? LT : GRN;
+        return (
+          <Card key={i} style={{ borderLeft: `4px solid ${bc}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Badge label={d.committee} color={commColor(d.committee)} />
+                <span style={{ fontSize: 11, color: LT, fontFamily: "monospace" }}>{d.id}</span>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <span style={{ fontSize: 11, color: LT }}>{d.date}</span>
+                <Badge label={d.status} color={d.status === "Active" ? "green" : "gray"} />
+              </div>
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 5 }}>{d.title}</div>
+            <div style={{ fontSize: 12, color: MID, marginBottom: 8 }}>{d.rationale}</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <span style={{ fontSize: 10, color: LT, fontWeight: 600 }}>TO:</span>
+              {d.audience.map((a, j) => <Badge key={j} label={a} color="gray" />)}
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── SAME-DAY BULLETIN ──────────────────────────────────────
+function Bulletin() {
+  const bulletinItems = [
+    { h: "CD Special Rate — New ceiling 4.75% (12-month)", d: "You are authorised to offer 12-month CD specials up to 4.75% APY effective immediately. Previous ceiling was 4.50%. Applies to new CDs only — no repricing of existing certificates.", a: "Update rate sheets and POS materials today. Log all new CD specials >= $100K to the deposit pricing tracker." },
+    { h: "Commercial Floating Rate — New floor 6.75% (SOFR + 200 bps)", d: "All new commercial floating rate commitments issued from today must carry a minimum all-in rate of 6.75%. Applies to new commitments and renewals only. Existing committed terms are not affected.", a: "Do not issue commitment letters below 6.75% without prior CCO approval. Update loan pricing models." },
+  ];
+  const timeline = [
+    { t: "9:00 AM",  l: "ALCO convenes",       c: BLU },
+    { t: "11:32 AM", l: "Adjourns",             c: BLU },
+    { t: "11:35 AM", l: "Decisions captured",   c: BLU },
+    { t: "3:44 PM",  l: "CFO approves",         c: GRN },
+    { t: "3:47 PM",  l: "47 recipients",        c: GRN },
+  ];
+  const distribution = [
+    { g: "Commercial Lenders", n: 12, ch: "Teams + Email" },
+    { g: "Branch Managers",    n: 8,  ch: "Teams + Email" },
+    { g: "Commercial RMs",     n: 18, ch: "Teams"         },
+    { g: "Retail Deposit Ops", n: 5,  ch: "Email"         },
+    { g: "ExCo",               n: 4,  ch: "Teams"         },
+    { g: "SharePoint Archive", n: 1,  ch: "Auto-filed"    },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: INK }}>Same-Day Bulletin</div>
+          <div style={{ fontSize: 13, color: MID, marginTop: 2 }}>ALCO decisions translated and distributed — same day</div>
+        </div>
+        <div style={{ background: GRNL, border: `1px solid ${GRNB}`, borderRadius: 6, padding: "6px 14px", fontSize: 12, fontWeight: 700, color: GRN }}>Distributed 3:47 PM · 47 recipients</div>
+      </div>
+
+      <Card>
+        <SL>Execution timeline — April 22, 2025</SL>
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
+          {timeline.map((s, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.c }} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: s.c, marginTop: 4, textAlign: "center" }}>{s.t}</div>
+                <div style={{ fontSize: 10, color: LT, textAlign: "center", marginTop: 1 }}>{s.l}</div>
+              </div>
+              {i < timeline.length - 1 && <div style={{ height: 1, background: BDR, flex: 0.4 }} />}
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card style={{ borderTop: `4px solid ${BLU}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>ALCO Pricing Bulletin #BULL-2025-014</div>
+            <div style={{ fontSize: 11, color: LT }}>April 22, 2025 · 3:47 PM · From: ALCO to All Lending & Branch Teams</div>
+          </div>
+          <div style={{ fontSize: 11, color: GRN, fontWeight: 600 }}>Approved by Sarah Chen, CFO at 3:44 PM</div>
+        </div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: INK, marginBottom: 14, padding: "10px 14px", background: BLUL, borderRadius: 6, borderLeft: `3px solid ${BLU}` }}>
+          Updated Deposit Pricing & Commercial Loan Floor — Effective Today
+        </div>
+        {bulletinItems.map((item, i) => (
+          <div key={i} style={{ marginBottom: i < bulletinItems.length - 1 ? 18 : 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 5 }}>{item.h}</div>
+            <div style={{ fontSize: 12, color: MID, lineHeight: 1.7, marginBottom: 8 }}>{item.d}</div>
+            <div style={{ background: AMBL, borderLeft: `3px solid ${AMB}`, padding: "7px 12px", borderRadius: "0 6px 6px 0", fontSize: 12, fontWeight: 600, color: "#92400E" }}>ACTION: {item.a}</div>
+            {i < bulletinItems.length - 1 && <div style={{ height: 1, background: RUL, margin: "14px 0" }} />}
+          </div>
+        ))}
+      </Card>
+
+      <Card>
+        <SL>Distribution log</SL>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          {distribution.map((x, i) => (
+            <div key={i} style={{ background: RUL, borderRadius: 6, padding: "10px 12px" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: INK }}>{x.g}</div>
+              <div style={{ fontSize: 11, color: LT, marginTop: 2 }}>{x.n} recipients · {x.ch}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ─── MAIN APP ───────────────────────────────────────────────
+const NAV = [
+  { id: "pulse",    label: "CEO Pulse",        icon: "◈" },
+  { id: "alco",     label: "ALCO Pre-Read",    icon: "◇" },
+  { id: "decisions",label: "Decision Log",     icon: "△" },
+  { id: "bulletin", label: "Same-Day Bulletin",icon: "○" },
+];
+
+function BOSSDemo() {
+  const [screen,   setScreen]   = useState("pulse");
+  const [alcoTab,  setAlcoTab]  = useState("Executive Summary");
+  const [approved, setApproved] = useState(false);
+
+  return (
+    <div style={{ display: "flex", height: "100vh", fontFamily: "'DM Sans', 'Segoe UI', sans-serif", background: BG, fontSize: 14 }}>
+
+      {/* Sidebar */}
+      <div style={{ width: 218, background: SIDE, display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto" }}>
+        <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 1, marginBottom: 3 }}>
+            <span style={{ fontSize: 11, color: "#94A3B8", letterSpacing: 1 }}>catalyst</span>
+            <span style={{ fontSize: 11, color: BLU }}>·</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#F8FAFC", letterSpacing: 1 }}>dna</span>
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#F8FAFC", letterSpacing: 3 }}>BOSS</div>
+          <div style={{ fontSize: 8, color: "#475569", letterSpacing: 2, textTransform: "uppercase", marginTop: 1 }}>Bank Ops & Strategy System</div>
+        </div>
+        <div style={{ padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#F1F5F9" }}>{BANK.name}</div>
+          <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>{BANK.assets} · {BANK.hq}</div>
+        </div>
+        <nav style={{ flex: 1, padding: "8px 0" }}>
+          {NAV.map((n) => (
+            <button key={n.id} onClick={() => setScreen(n.id)} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 20px", background: screen === n.id ? "rgba(59,130,246,0.15)" : "transparent", borderLeft: `3px solid ${screen === n.id ? BLU : "transparent"}`, borderRight: "none", borderTop: "none", borderBottom: "none", color: screen === n.id ? "#F8FAFC" : "#94A3B8", fontSize: 13, fontWeight: screen === n.id ? 600 : 400, cursor: "pointer", textAlign: "left" }}>
+              <span style={{ color: screen === n.id ? BLU : "#475569" }}>{n.icon}</span>
+              {n.label}
+            </button>
+          ))}
+        </nav>
+        <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: GRN }} />
+            <span style={{ fontSize: 10, color: "#94A3B8" }}>All systems operational</span>
+          </div>
+          <div style={{ fontSize: 10, color: "#475569" }}>M365 · Integrated</div>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* Top bar */}
+        <div style={{ background: CARD, borderBottom: `1px solid ${BDR}`, padding: "9px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <div style={{ fontSize: 12, color: LT }}>
+            {screen === "alco" ? `ALCO Pre-Read · ${alcoTab}` : NAV.find((n) => n.id === screen)?.label}
+          </div>
+          {screen === "alco" && (
+            <button onClick={() => setApproved(!approved)} style={{ background: approved ? GRN : BLUD, color: "#fff", border: "none", borderRadius: 6, padding: "6px 16px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+              {approved ? "CFO Approved & Published" : "CFO Approve & Publish"}
+            </button>
+          )}
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <span style={{ fontSize: 11, color: LT }}>Sarah Chen, CFO</span>
+            <div style={{ width: 27, height: 27, borderRadius: "50%", background: BLUL, border: `2px solid ${BLU}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: BLU }}>SC</div>
+          </div>
+        </div>
+
+        {/* ALCO tab bar */}
+        {screen === "alco" && (
+          <div style={{ background: CARD, borderBottom: `1px solid ${BDR}`, display: "flex", overflowX: "auto", flexShrink: 0, padding: "0 16px" }}>
+            {ALCO_TABS.map((tab) => (
+              <button key={tab} onClick={() => setAlcoTab(tab)} style={{ padding: "9px 12px", background: "transparent", border: "none", borderBottom: `2px solid ${alcoTab === tab ? BLU : "transparent"}`, color: alcoTab === tab ? BLU : LT, fontSize: 11, fontWeight: alcoTab === tab ? 700 : 400, cursor: "pointer", whiteSpace: "nowrap" }}>
+                {tab}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 22 }}>
+          <div style={{ maxWidth: 1080 }}>
+            {screen === "pulse"     && <CEOPulse />}
+            {screen === "alco"      && <AlcoScreen tab={alcoTab} approved={approved} />}
+            {screen === "decisions" && <DecisionLog />}
+            {screen === "bulletin"  && <Bulletin />}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(BOSSDemo));
+</script>
+</body>
+</html>

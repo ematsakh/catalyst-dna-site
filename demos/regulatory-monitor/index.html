@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regulatory Change Monitor — obligation heatline · Catalyst-DNA</title>
+<meta name="description" content="Set your profile, get the heatline: what changed, why it reaches you, what to do — and what does not reach you and why. Live demo scanning recent regulatory activity.">
+<link rel="canonical" href="https://catalyst-dna.com/demos/regulatory-monitor/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ==== catalyst-dna tokens (inlined per single-file law) ==== */
+:root{
+  --bg-primary:#09090B; --surface:#18181B; --surface-raised:#1F1F24;
+  --border:#27272A; --border-active:#33415C;
+  --text-primary:#FAFAFA; --text-secondary:#A1A1AA; --text-tertiary:#6F6F78;
+  --accent:#2E71E5; --accent-bright:#6FA2F5;
+  --accent-glow:rgba(46,113,229,.32); --warn:#E0A43C;
+  --font-display:"Outfit",system-ui,sans-serif;
+  --font-body:"DM Sans",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1.0625rem; --text-lg:1.25rem;
+  --duration-fast:150ms; --ease-out:cubic-bezier(.22,1,.36,1);
+  --radius-sm:6px; --radius-md:10px; --tracking-eyebrow:.14em;
+  --ok:#4C9E7E; --ok-dim:rgba(76,158,126,.14);
+  --warn-dim:rgba(224,164,60,.14);
+  --alert:#C4574E; --alert-dim:rgba(196,87,78,.14);
+  --tl-chip-h:1.375rem; --tl-inset:.875rem; --tl-hairline:1px solid var(--border);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-body);
+  font-size:var(--text-base);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-bright);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 2rem;backdrop-filter:blur(12px);background:rgba(9,9,11,.72);border-bottom:1px solid var(--border)}
+.nav .brand{font-family:var(--font-display);font-weight:600;font-size:1.05rem}
+.nav .brand em{font-style:normal;color:var(--accent-bright)}
+.nav .back{font-size:var(--text-sm);color:var(--text-secondary)}
+.nav .back:hover{color:var(--text-primary)}
+.wrap{max-width:50rem;margin:0 auto;padding:0 1.5rem}
+.eyebrow{font-family:var(--font-mono);font-size:var(--text-xs);font-weight:500;
+  letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--accent-bright)}
+.head{padding:3.4rem 0 1.8rem}
+.head h1{font-family:var(--font-display);font-weight:700;font-size:clamp(1.7rem,4vw,2.4rem);
+  letter-spacing:-.015em;line-height:1.12;margin:.8rem 0 .7rem}
+.head .sub{color:var(--text-secondary);max-width:40rem}
+.badge{display:inline-flex;align-items:center;gap:.45rem;margin-top:.9rem;
+  font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-bright)}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-bright);box-shadow:0 0 8px var(--accent-glow)}
+
+/* ==== trust layer ==== */
+.tl-cite{display:inline-flex;align-items:center;gap:.3rem;height:var(--tl-chip-h);padding:0 .5rem;
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);
+  font-family:var(--font-mono);font-size:var(--text-xs);color:var(--accent-bright);cursor:pointer;vertical-align:baseline;
+  transition:border-color var(--duration-fast) var(--ease-out)}
+.tl-cite:hover{border-color:var(--border-active);background:var(--surface-raised)}
+.tl-cite::before{content:"↗";color:var(--text-tertiary);font-size:.9em}
+.tl-conf{display:inline-flex;align-items:center;gap:.35rem;height:var(--tl-chip-h);padding:0 .55rem;
+  border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.04em;white-space:nowrap}
+.tl-conf::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.tl-conf--verified{color:var(--ok);background:var(--ok-dim)}
+.tl-conf--qualified{color:var(--warn);background:var(--warn-dim)}
+.tl-asof{display:inline-flex;align-items:center;gap:.35rem;font-family:var(--font-mono);
+  font-size:var(--text-xs);color:var(--text-tertiary);white-space:nowrap}
+.tl-asof::before{content:"◷";font-size:.95em}
+.tl-engage{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem 1rem;
+  padding:.65rem var(--tl-inset);border:1px dashed var(--border);border-radius:var(--radius-sm)}
+.tl-engage-check{font-size:var(--text-sm);color:var(--text-secondary)}
+.tl-engage-check + .tl-engage-check::before{content:"· ";color:var(--text-tertiary)}
+.tl-engage-tag{margin-left:auto;font-family:var(--font-mono);font-size:var(--text-xs);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);white-space:nowrap}
+
+/* ==== surface: obligation heatline ==== */
+.profile{display:grid;grid-template-columns:1fr 1fr 2fr auto;gap:.7rem;padding:1.2rem 0 .4rem}
+@media(max-width:760px){.profile{grid-template-columns:1fr}}
+.profile select,.profile input{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-body);
+  font-size:var(--text-sm);padding:.6rem .8rem}
+.profile select:focus,.profile input:focus{border-color:var(--border-active);outline:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;font-weight:500;font-size:var(--text-sm);
+  padding:.6rem 1.15rem;border:none;border-radius:var(--radius-sm);background:var(--accent);color:#fff;
+  cursor:pointer;font-family:var(--font-body);transition:box-shadow var(--duration-fast) var(--ease-out)}
+.btn:hover{box-shadow:0 0 24px var(--accent-glow)}
+.btn[disabled]{opacity:.55;cursor:wait;box-shadow:none}
+.note{font-size:var(--text-xs);color:var(--text-tertiary);font-family:var(--font-mono);padding:.3rem 0 1rem}
+
+.heat{padding:1.2rem 0 3.6rem;display:none}
+.heat.on{display:block}
+
+/* pinned profile bar */
+.pbar{display:flex;gap:1rem;flex-wrap:wrap;align-items:baseline;
+  border:var(--tl-hairline);border-radius:var(--radius-md);background:var(--surface);
+  padding:.85rem 1.1rem;margin-bottom:1rem;font-family:var(--font-mono);font-size:var(--text-xs)}
+.pbar .pb-k{color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em}
+.pbar .pb-v{color:var(--text-primary)}
+.pbar .pb-temp{margin-left:auto;color:var(--text-secondary);font-family:var(--font-body);font-size:var(--text-sm)}
+
+/* heatline card: three columns, direct from the playbook */
+.hcard{border:var(--tl-hairline);border-left:2px solid var(--accent);border-radius:var(--radius-sm);
+  background:var(--surface);padding:1rem 1.15rem;margin-bottom:.65rem}
+.hcard .h-meta{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem}
+.hcard .h-eff{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--warn)}
+.hcard .h-eff::before{content:"effective ";color:var(--text-tertiary)}
+.hcard .h-owner{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--accent-bright);
+  border:var(--tl-hairline);border-radius:999px;padding:.1rem .6rem}
+.hgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+@media(max-width:720px){.hgrid{grid-template-columns:1fr}}
+.hcol .hc-label{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text-tertiary);display:block;margin-bottom:.25rem}
+.hcol .hc-body{font-size:var(--text-sm)}
+.hcol--so .hc-body{color:var(--text-secondary)}
+.hcol--now .hc-body{color:var(--text-primary)}
+
+/* the negative-finding band: first-class, visually quieter */
+.nband{margin:1.2rem 0 .3rem}
+.nband h2, .wband h2{font-family:var(--font-mono);font-size:var(--text-xs);font-weight:500;
+  letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--text-tertiary);margin-bottom:.6rem}
+.ncard{display:grid;grid-template-columns:1.2fr 1.6fr;gap:1rem;align-items:baseline;
+  border-left:2px solid var(--border);padding:.6rem var(--tl-inset);margin-bottom:.4rem;
+  font-size:var(--text-sm);color:var(--text-tertiary)}
+@media(max-width:720px){.ncard{grid-template-columns:1fr}}
+.ncard .n-what{color:var(--text-secondary)}
+.ncard .n-why::before{content:"does not reach you: ";font-family:var(--font-mono);font-size:var(--text-xs)}
+
+/* watchlist */
+.wband{margin:1.2rem 0 .3rem}
+.wcard{display:flex;gap:.9rem;align-items:baseline;padding:.5rem 0;font-size:var(--text-sm);
+  border-top:1px solid var(--border)}
+.wcard:first-of-type{border-top:none}
+.wcard .w-h{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--warn);flex:none}
+
+.quiet{border:var(--tl-hairline);border-radius:var(--radius-sm);padding:.8rem 1rem;
+  font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:.8rem}
+
+.err{border:1px solid var(--alert);border-radius:var(--radius-sm);background:var(--alert-dim);
+  font-size:var(--text-sm);padding:.8rem 1rem;margin:1rem 0;display:none}
+.raw{white-space:pre-wrap;font-size:var(--text-sm);color:var(--text-secondary);
+  border:var(--tl-hairline);border-radius:var(--radius-md);padding:1.2rem;margin-top:1rem;display:none}
+.skeleton{display:none;padding:1.5rem 0}
+.skeleton .sk{height:5rem;border:var(--tl-hairline);border-radius:var(--radius-md);
+  background:linear-gradient(100deg,var(--surface) 40%,var(--surface-raised) 50%,var(--surface) 60%);
+  background-size:200% 100%;animation:sk 1.4s ease infinite;margin-bottom:.7rem}
+@keyframes sk{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.skeleton .sk{animation:none}}
+.footer{border-top:1px solid var(--border);padding:2rem;display:flex;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;font-size:var(--text-sm);color:var(--text-tertiary)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">Catalyst<em>-DNA</em></div>
+  <a class="back" href="/demos/">← All demos</a>
+</nav>
+
+<header class="head">
+  <div class="wrap">
+    <div class="eyebrow">Chief Compliance Officer · Live demo</div>
+    <h1>Regulatory Change Monitor — the obligation heatline</h1>
+    <p class="sub">Precision over breadth: what changed, why it reaches your charter, what to do about it — and, uniquely, what does not reach you and the threshold that keeps it away. A quiet period is a finding, not a failure.</p>
+    <div class="badge"><span class="dot"></span>Live · public regulatory sources</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="profile">
+    <select id="assetSize">
+      <option>Under $1B</option>
+      <option selected>$1B-$10B</option>
+      <option>$10B-$50B</option>
+    </select>
+    <select id="regulator">
+      <option selected>FDIC</option><option>OCC</option>
+      <option>Federal Reserve</option><option>NCUA</option>
+    </select>
+    <input id="lines" type="text" placeholder="Business lines (comma-separated)" value="commercial lending, retail deposits, BSA/AML">
+    <button class="btn" id="run">Scan for my charter</button>
+  </div>
+  <div class="note">~45-day scan window across your primary regulator plus FinCEN, CFPB, and FFIEC. Every item links to its primary source.</div>
+
+  <div class="err" id="err"></div>
+  <div class="skeleton" id="skel"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+
+  <section class="heat" id="heat" aria-live="polite">
+    <div id="pbar"></div>
+    <div id="applies"></div>
+    <div class="nband"><h2>Does not reach you — and why</h2><div id="notapply"></div></div>
+    <div class="wband"><h2>Watch list · next two quarters</h2><div id="watch"></div></div>
+
+    <div class="tl-engage" role="note" style="margin-top:1.1rem">
+      <span class="tl-engage-check">Policy/control mapping to your inventory</span>
+      <span class="tl-engage-check">Named-owner routing</span>
+      <span class="tl-engage-check">Guidance-page-edit gap-catcher</span>
+      <span class="tl-engage-tag">requires bank data · engagement mode</span>
+    </div>
+  </section>
+
+  <pre class="raw" id="raw"></pre>
+</main>
+
+<footer class="footer">
+  <span>© 2026 Catalyst-DNA LLC</span>
+  <span>Live demos run on public data only</span>
+</footer>
+
+<script>
+const WORKER_BASE = "https://REPLACE-ME.workers.dev";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function citeChips(cites){
+  return (cites || []).map((c,i) => {
+    const label = esc(c.label || c.source || ("source " + (i+1)));
+    return c.url
+      ? `<a class="tl-cite" href="${esc(c.url)}" target="_blank" rel="noopener">${label}</a>`
+      : `<span class="tl-cite">${label}</span>`;
+  }).join(" ");
+}
+function confTag(conf){
+  if(!conf || !conf.state) return "";
+  const cls = conf.state === "verified" ? "verified" : "qualified";
+  return `<span class="tl-conf tl-conf--${cls}">${esc(conf.reason || conf.state)}</span>`;
+}
+
+function renderHeat(p){
+  $("pbar").innerHTML = `
+    <div class="pbar">
+      <span><span class="pb-k">size </span><span class="pb-v">${esc(p.profile?.assetSize)}</span></span>
+      <span><span class="pb-k">regulator </span><span class="pb-v">${esc(p.profile?.regulator)}</span></span>
+      <span><span class="pb-k">lines </span><span class="pb-v">${esc((p.profile?.lines || []).join(", "))}</span></span>
+      <span class="pb-temp">${esc(p.scan?.temperature || "")}</span>
+    </div>`;
+
+  const applies = (p.items || []).filter(i => i.applies);
+  const not = (p.items || []).filter(i => !i.applies);
+
+  $("applies").innerHTML = applies.length ? applies.map(i => `
+    <article class="hcard">
+      <div class="h-meta">
+        ${i.effective ? `<span class="h-eff">${esc(i.effective)}</span>` : ""}
+        ${i.owner ? `<span class="h-owner">${esc(i.owner)}</span>` : ""}
+        ${confTag(i.conf)} ${citeChips(i.cites)}
+      </div>
+      <div class="hgrid">
+        <div class="hcol"><span class="hc-label">What changed</span><span class="hc-body">${esc(i.changed)}</span></div>
+        <div class="hcol hcol--so"><span class="hc-label">So what</span><span class="hc-body">${esc(i.soWhat)}</span></div>
+        <div class="hcol hcol--now"><span class="hc-label">Now what</span><span class="hc-body">${esc(i.nowWhat)}</span></div>
+      </div>
+    </article>`).join("")
+    : `<div class="quiet">A quiet period for this profile — that is a valid finding, not a gap in the scan.</div>`;
+
+  $("notapply").innerHTML = not.map(i => `
+    <div class="ncard">
+      <span class="n-what">${esc(i.changed)}</span>
+      <span class="n-why">${esc(i.soWhat)}</span>
+    </div>`).join("") || `<div class="ncard"><span class="n-what">Nothing prominent excluded this cycle.</span></div>`;
+
+  $("watch").innerHTML = (p.watchlist || []).map(w => `
+    <div class="wcard">
+      <span class="w-h">${esc(w.horizon)}</span>
+      <span>${esc(w.changed)} ${citeChips(w.cites)}</span>
+    </div>`).join("");
+
+  $("heat").classList.add("on");
+}
+
+$("run").addEventListener("click", async () => {
+  $("err").style.display="none"; $("raw").style.display="none"; $("heat").classList.remove("on");
+  $("run").disabled = true; $("skel").style.display = "block";
+  const lines = $("lines").value.split(",").map(s => s.trim()).filter(Boolean);
+  try{
+    const res = await fetch(WORKER_BASE + "/regmonitor", {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ assetSize: $("assetSize").value, regulator: $("regulator").value, lines })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || "Agent unavailable — try again in a minute.");
+    if(data.envelope && data.payload){ renderHeat(data.payload); }
+    else if(data.output){ $("raw").textContent = data.output; $("raw").style.display = "block"; }
+    else { throw new Error("Unexpected response shape."); }
+  } catch(e){ $("err").textContent = e.message; $("err").style.display = "block"; }
+  finally { $("run").disabled = false; $("skel").style.display = "none"; }
+});
+</script>
+</body>
+</html>
