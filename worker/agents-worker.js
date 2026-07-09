@@ -13,7 +13,11 @@
      npx wrangler deploy
      # paste https://<worker>.workers.dev into WORKER_BASE in each demo page
 
-   COST: claude-sonnet-4-6 ($3/$15 per MTok, July 2026), max_tokens 2500,
+   CONTRACTS: all 14 routes emit { envelope, payload } JSON validated
+   against agent-output-contracts.md. Invalid output degrades to
+   { output } and each demo page renders it in its fallback panel.
+
+   COST: claude-sonnet-4-6 ($3/$15 per MTok, July 2026), max_tokens 2200-3500,
    web search ≤3-4 uses/request → ≈$0.10-0.18 per generation.
    Shared cap: 8 generations / IP / day across all agents.
    ============================================================ */
@@ -36,6 +40,767 @@ const BRIEFING_CONTEXTS = {
   annual_review:    "an annual relationship review",
 };
 
+
+/* ============================================================
+   AGENT OUTPUT CONTRACTS  (merged: chunks 1-4, all 14 routes)
+   envelope.engagementOnly and envelope.gate are CODE CONSTANTS,
+   never model output. Routes emit { envelope, payload }; on
+   validation failure the response degrades to { output: <text> }
+   which every demo page renders in its fallback panel.
+   ============================================================ */
+
+const CONTRACT_META = {
+  ceobrief: {
+    surface: "executive-signal-stack",
+    seat: "CEO / President",
+    mode: "live-public",
+    universe: null,
+    engagementOnly: [
+      { check: "overnight internal numbers — deposit flows, pipeline, liquidity position",
+        why: "requires core extracts" },
+    ],
+    gate: { state: "draft", holder: "CEO", holds: "operating decisions informed by the brief" },
+  },
+  briefing: {
+    surface: "relationship-canvas",
+    seat: "Chief Lending Officer",
+    mode: "live-public",
+    universe: null,
+    engagementOnly: [
+      { check: "existing-exposure and conflict lookup", why: "requires core + CRM" },
+      { check: "KYC-gap check", why: "requires CDD records" },
+      { check: "servicing-issue scan", why: "requires servicing system" },
+    ],
+    gate: { state: "draft", holder: "Relationship banker", holds: "the meeting and the ask" },
+  },
+  attrition: {
+    surface: "retention-radar",
+    seat: "Chief Banking Officer",
+    mode: "fictional-packet",
+    universe: "cedarline",
+    engagementOnly: [
+      { check: "90-day baseline validation across the book", why: "requires core transaction history" },
+      { check: "householding across the relationship", why: "requires customer graph" },
+      { check: "live wholesale rate feed", why: "requires treasury data" },
+    ],
+    gate: { state: "draft", holder: "Relationship Manager",
+            holds: "outreach and pricing — exceptions per [LP-6.1]" },
+  },
+  creditmemo: {
+    surface: "underwriting-argument-map",
+    seat: "Chief Credit Officer",
+    mode: "fictional-packet",
+    universe: "cedarline",
+    engagementOnly: [
+      { check: "K-1 tracing across related entities", why: "requires full tax returns" },
+      { check: "covenant-conflict scan against the book", why: "requires loan system" },
+      { check: "statement-recency verification", why: "requires loan file" },
+    ],
+    gate: { state: "draft", holder: "Credit Analyst / Loan Committee",
+            holds: "the credit decision" },
+  },
+  callreport: {
+    surface: "schedule-close-board",
+    seat: "CFO",
+    mode: "fictional-packet",
+    universe: "cedarline",
+    engagementOnly: [
+      { check: "GL-to-schedule reconciliation", why: "requires general ledger extract" },
+      { check: "prior-period variance tolerance vs bank history", why: "requires prior filings archive" },
+      { check: "four-eyes certification", why: "requires bank workflow system" },
+    ],
+    gate: { state: "draft", holder: "Controller", holds: "filing — accuracy rests with the bank" },
+  },
+  amltriage: {
+    surface: "evidence-chain",
+    seat: "Chief Risk Officer / BSA Officer",
+    mode: "fictional-packet",
+    universe: "cedarline",
+    engagementOnly: [
+      { check: "prior-SAR similarity search", why: "requires the bank's SAR history" },
+      { check: "sanctions and adverse-media corroboration", why: "requires screening systems" },
+      { check: "Continuing Activity Report timing", why: "requires filing history" },
+    ],
+    gate: { state: "draft", holder: "BSA Officer", holds: "filing decision" },
+  },
+  regmonitor: {
+    surface: "obligation-heatline",
+    seat: "Chief Compliance Officer",
+    mode: "live-public",
+    universe: null,
+    engagementOnly: [
+      { check: "policy/control mapping to the bank's inventory", why: "requires policy inventory" },
+      { check: "named-owner routing", why: "requires org data" },
+      { check: "guidance-page-edit gap-catcher", why: "requires continuous feed" },
+    ],
+    gate: { state: "draft", holder: "Chief Compliance Officer", holds: "response ownership and routing" },
+  },
+  docflow: {
+    surface: "ops-conveyor",
+    seat: "COO",
+    mode: "fictional-packet",
+    universe: "cedarline",
+    engagementOnly: [
+      { check: "cross-packet consistency vs core records", why: "requires imaging system + core" },
+      { check: "retention-category assignment", why: "requires records policy" },
+      { check: "reviewer-authority check", why: "requires entitlements system" },
+    ],
+    gate: { state: "draft", holder: "Operations review", holds: "exception resolution — per bank procedures" },
+  },
+  contractanalyzer: {
+    surface: "contract-x-ray",
+    seat: "CIO",
+    mode: "fictional-packet",
+    universe: "northarc",
+    engagementOnly: [
+      { check: "clause-vs-bank-standard comparison", why: "requires standards library" },
+      { check: "vendor criticality tier", why: "requires vendor inventory" },
+      { check: "portfolio-wide obligation roll-up", why: "requires contract repository" },
+    ],
+    gate: { state: "draft", holder: "Counsel", holds: "legal review — this analysis is not legal advice" },
+  },
+  securityreview: {
+    surface: "control-confidence-ladder",
+    seat: "CISO",
+    mode: "fictional-packet",
+    universe: "northarc",
+    engagementOnly: [
+      { check: "external telemetry feed", why: "requires monitoring subscription" },
+      { check: "fourth-party concentration vs the bank's vendor book", why: "requires vendor inventory" },
+      { check: "questionnaire-vs-evidence reconciliation at scale", why: "requires completed SIG + full SOC 2 body" },
+    ],
+    gate: { state: "draft", holder: "CISO", holds: "risk acceptance — this review informs, it does not decide" },
+  },
+  archassess: {
+    surface: "dependency-atlas",
+    seat: "CTO",
+    mode: "fictional-packet",
+    universe: "cedarline",
+    engagementOnly: [
+      { check: "CMDB/discovery reconciliation", why: "requires live inventory access" },
+      { check: "EOL check against live lifecycle data", why: "requires product-lifecycle sources" },
+      { check: "failover verification", why: "requires DR test evidence" },
+    ],
+    gate: { state: "draft", holder: "the bank", holds: "architecture decisions — this assessment informs the roadmap" },
+  },
+  projectassess: {
+    surface: "investment-jury",
+    seat: "Chief Transformation Officer",
+    mode: "fictional-packet",
+    universe: "cedarline-northarc",
+    engagementOnly: [
+      { check: "efficiency-ratio and NIM impact vs the bank's financials", why: "requires GL + call-report data" },
+      { check: "peer benchmark off call-report data", why: "requires peer data pipeline" },
+      { check: "change-fatigue overlap with the live portfolio", why: "requires project inventory" },
+    ],
+    gate: { state: "draft", holder: "Investment Committee", holds: "investment decisions — this trial informs the docket" },
+  },
+  interviewkit: {
+    surface: "structured-interviewer-cockpit",
+    seat: "CHRO",
+    mode: "live-public",
+    universe: null,
+    engagementOnly: [
+      { check: "resume assessment with line-cited strengths/gaps", why: "engagement mode only — by design, not by limitation" },
+      { check: "interviewer calibration", why: "requires the bank's rubric and panel" },
+      { check: "adverse-impact monitoring by stage", why: "requires bank ATS data" },
+    ],
+    gate: { state: "draft", holder: "Hiring manager", holds: "hiring decisions — this kit structures the conversation, nothing more" },
+  },
+  policyqa: {
+    surface: "policy-lane",
+    seat: "Chief Data Officer",
+    mode: "fictional-packet",
+    universe: "cedarline",
+    engagementOnly: [
+      { check: "permissions-aware retrieval", why: "requires entitlements" },
+      { check: "conflict detection across the full corpus", why: "requires complete policy inventory" },
+      { check: "decision-use logging", why: "requires audit infrastructure" },
+    ],
+    gate: { state: "draft", holder: "Policy owner", holds: "operational decisions made on answers" },
+  },
+};
+
+const JSON_FORMAT = {
+
+  ceobrief: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "bank": "<the bank name as given>",
+  "market": "<the market as given>",
+  "signals": [
+    {
+      "lane": "rates" | "bank-news" | "market" | "regulatory" | "worth-5-min",
+      "changed": "<one sentence: what changed>",
+      "matters": "<one sentence: why it matters to THIS bank at its scale>",
+      "action": "<one sentence recommended action>" | null,
+      "conf": { "state": "verified" | "qualified", "reason": "<e.g. 'two sources' or 'single source'>" },
+      "cites": [ { "kind": "live", "label": "<source name>", "url": "<url>" } ],
+      "asOf": "<YYYY-MM-DD of the underlying fact>"
+    }
+  ],
+  "quietLanes": [ { "lane": "<lane>", "note": "<one line stating nothing recent was found>" } ]
+}
+Rules for the shape: 5-7 signals TOTAL including exactly one "rates" lane signal (the number
+that matters today). Every signal needs at least one cite with a real URL from your searches.
+A lane with nothing to report goes in quietLanes — never pad a lane to fill it. conf.state is
+"verified" only when two independent sources agree; otherwise "qualified" with the reason.`,
+
+  briefing: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "company": "<as given>",
+  "context": "<as given>",
+  "snapshot": { "text": "<2-3 sentences>", "conf": { "state": "verified"|"qualified", "reason": "<why>" },
+                "cites": [ { "kind": "live", "label": "<source>", "url": "<url>" } ] },
+  "developments": [ { "text": "<one development>", "asOf": "<YYYY-MM-DD>", "cites": [ ... ] } ],
+  "likelyNeeds": [ { "hypothesis": "<the need>", "signal": "<the public fact that suggests it>", "cites": [ ... ] } ],
+  "angles": [ { "opener": "<conversation angle>", "evidence": "<the fact it stands on>", "cites": [ ... ] } ],
+  "risks": [ { "text": "<risk or red flag>", "conf": { ... }, "cites": [ ... ] } ],
+  "questions": [ "<question to ask in the meeting>" ]
+}
+Rules for the shape: exactly 3 angles. Every likelyNeeds entry MUST carry the signal that
+generated it — a hypothesis without its signal is invalid. If the company cannot be verified,
+snapshot.conf.state is "qualified" and every other array may be short or empty — never
+fabricate to fill the canvas. developments may be [] — the surface renders that honestly.`,
+
+  attrition: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "flag": { "id": "EW-2026-0198", "rule": "<rule name>", "priority": "High" },
+  "relationship": { "name": "<from packet>", "tenureYears": 9,
+                    "components": [ "<relationship component>" ], "feeIncomeYr": 14000 },
+  "balances": [ <the 12 month-end balances from the packet, in $000, oldest first> ],
+  "signal": {
+    "declineRunRateMo": { "value": <number USD/mo>, "cites": [ { "kind": "derived", "formula": "<arithmetic shown>" } ] },
+    "projection6mo":    { "value": <number USD>,    "cites": [ { "kind": "derived", "formula": "<arithmetic shown>" } ] }
+  },
+  "benignChecks": [
+    { "pattern": "<benign explanation tested>", "verdict": "ruled out" | "cannot rule out", "because": "<the packet fact>" }
+  ],
+  "drivers": [ { "hypothesis": "<driver hypothesis>", "signal": "<the specific flow signal>",
+                 "cites": [ { "kind": "doc", "ref": "packet" } ] } ],
+  "economics": {
+    "replacementCost": { "formula": "<e.g. wholesale 4.60% − MMDA 1.10% = 3.50% × balance at risk>", "value": <number>, "cites": [ ... ] },
+    "retentionCost":   { "formula": "<arithmetic>", "value": <number>, "cites": [ ... ] },
+    "breakEvenRate":   { "formula": "<arithmetic>", "value": "<e.g. '3.85% APY'>", "cites": [ ... ] }
+  },
+  "play": [ { "step": 1, "who": "<role>", "does": "<action>" } ],
+  "outreachNote": { "text": "<the note — warm, non-alarmed, no rate mentioned>", "rule": "no rate mentioned" }
+}
+Rules for the shape: every economics field is INVALID without its formula — the surface will
+not render a value that arrives without arithmetic. benignChecks must test at least
+seasonality and revenue decline before any driver is offered. Drivers are hypotheses; each
+must name its flow signal.`,
+
+  creditmemo: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "request": { "text": "<one line>", "amounts": [ { "label": "<e.g. equipment term>", "value": 1200000 } ] },
+  "map": [
+    {
+      "claim": "<a load-bearing claim of the credit case>",
+      "evidence": [ { "text": "<fact or computed figure>",
+                      "cites": [ { "kind": "doc", "ref": "packet" } |
+                                 { "kind": "derived", "formula": "<arithmetic shown>" } ] } ],
+      "risks": [ { "text": "<risk>", "cites": [ { "kind": "doc", "ref": "LP-7.3" } ] } ],
+      "mitigants": [ { "text": "<mitigant>", "cites": [ ... ] } ],
+      "policyExceptions": [ { "ref": "<LP-x.x>", "requires": "<what approval it needs, per LP-6.1>" } ]
+    }
+  ],
+  "collateral": { "text": "<collateral analysis>", "cites": [ ... ] },
+  "stressLens": {
+    "scenario": "EBITDA −15%",
+    "weakestFacts": [ "<the 2-3 facts that most weaken this credit>" ],
+    "map": [ <same node shape as map[], rebuilt under the stress scenario> ]
+  },
+  "exceptions": [ { "field": "<what is missing>", "why": "<why it is an exception>", "fix": "<what resolves it · owner>" } ],
+  "recommendation": { "verdict": "draft-approve" | "draft-approve-with-conditions" | "draft-decline",
+                      "conditions": [ "<condition precedent>" ] }
+}
+Rules for the shape: 3-5 map nodes; the DSCR computation MUST appear as derived evidence with
+its formula. Policy touchpoints cite [LP-x.x] refs exactly as in the excerpts. stressLens.map
+is a REBUILT argument map under the scenario — not the base map with adjectives. Missing
+documents are exceptions[], never omissions.`,
+
+  callreport: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "period": "2026-06-30",
+  "board": [
+    { "schedule": "RC" | "RC-C" | "RI" | "RC-R", "status": "tied" | "flagged",
+      "owner": "<role>", "asOf": "<YYYY-MM-DD>" }
+  ],
+  "tieouts": [
+    { "check": "<what is being tied out>",
+      "left": <number $000>, "right": <number $000>, "delta": <number $000>,
+      "pass": true | false,
+      "cites": [ { "kind": "derived", "formula": "<the arithmetic, shown>" } ] }
+  ],
+  "flags": [
+    { "n": 1, "what": "<the finding>", "magnitude": "<size in context, e.g. '0.78% of total loans'>",
+      "resolves": "<what to fix or document>",
+      "draftExplanation": "<one examiner-ready paragraph the controller can adapt>",
+      "cites": [ { "kind": "derived", "formula": "<arithmetic>" } | { "kind": "doc", "ref": "packet" } ] }
+  ],
+  "filingChecklist": [ { "item": "<action before submission>", "done": false } ]
+}
+Rules for the shape: every board schedule from the extracts appears exactly once. Every
+tieout carries pass AND its formula — a failed tie-out without shown arithmetic is invalid.
+The three seeded findings (RC vs RC-C gap, YoY interest income variance, RC-R risk-weighting
+note) must each appear as a flag with its draftExplanation welded in. Never invent figures
+to force a tie-out.`,
+
+  amltriage: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "alert": { "id": "TM-2026-0412", "rule": "<rule name>", "priority": "High" },
+  "chain": [
+    { "t": "<date or date-range from packet>" | null,
+      "fact": "<one chain entry>",
+      "kind": "fact" | "analysis" | "hypothesis",
+      "remediation": true,        // ONLY on the missed-CTR entry; omit elsewhere
+      "cites": [ { "kind": "doc", "ref": "packet" } |
+                 { "kind": "derived", "formula": "<arithmetic shown>" } ] }
+  ],
+  "checklist": [ { "item": "<what the analyst should pull or verify>", "closes": "<which gap it closes>" } ],
+  "narrative": {
+    "pillars": { "who": "<subject identification>", "what": "<instruments and amounts>",
+                 "when": "<the activity window>", "where": "<branches/locations>",
+                 "whySuspicious": "<the pattern, factually>", "amounts": "<totals>" },
+    "sentences": [ { "text": "<one narrative sentence, plain factual prose>",
+                     "supports": [ <zero-based indexes into chain> ] } ],
+    "complete": true | false
+  },
+  "disposition": { "recommendation": "<recommend filing / no filing>", "rationale": "<why>" }
+}
+Rules for the shape: chain kinds are strict — packet facts are "fact", computed comparisons
+are "analysis" with formulas, typology interpretations are "hypothesis"; never promote a
+hypothesis to fact. Every narrative sentence MUST list the chain entries it stands on in
+supports[] — a sentence with an empty supports[] is invalid. complete is true ONLY when all
+six pillar fields are substantively filled. 5-7 checklist items. The June 16 missed CTR
+aggregation appears in the chain with remediation:true. No speculation about intent, no
+legal conclusions.`,
+
+  regmonitor: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "profile": { "assetSize": "<as given>", "regulator": "<as given>", "lines": [ "<as given>" ] },
+  "scan": { "periodDays": 45, "agencies": [ "<agency scanned>" ], "temperature": "<one line>" },
+  "items": [
+    { "applies": true,
+      "changed": "<what it is — agency, date, instrument>",
+      "soWhat": "<why it reaches this profile>",
+      "nowWhat": "<the action it implies>",
+      "owner": "<typical owner role>",
+      "effective": "<YYYY-MM-DD>" | null,
+      "cites": [ { "kind": "live", "label": "<agency/source>", "url": "<url>" } ],
+      "conf": { "state": "verified" | "qualified", "reason": "<why>" } },
+    { "applies": false,
+      "changed": "<the prominent item>",
+      "soWhat": "<the threshold or scope reason it does NOT reach this profile>",
+      "nowWhat": null, "owner": null, "effective": null,
+      "cites": [ { "kind": "live", "label": "<source>", "url": "<url>" } ] }
+  ],
+  "watchlist": [ { "changed": "<proposed rule or signal>", "horizon": "<when it matures>",
+                   "cites": [ ... ] } ]
+}
+Rules for the shape: one item shape for both verdicts — applies:false items are first-class
+rows carrying their exclusion reason in soWhat. 3-5 applying items most-urgent-first, 2-3
+non-applying, 2-3 watchlist. Every item must be real, dated, attributable, with a live cite
+URL from your searches — never invent releases or docket numbers. Zero applying items is a
+valid result: return items:[] applying and note the quiet period in scan.temperature.`,
+
+  docflow: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "batch": { "count": 3, "received": "<how the batch arrived>" },
+  "docs": [
+    {
+      "id": "A", "class": "<document classification>", "channel": "fax" | "email" | "mail scan",
+      "fields": [
+        { "name": "<field name>", "value": "<extracted value>" | null,
+          "conf": { "state": "verified" | "qualified" | "routed", "reason": "<why>" },
+          "exc": { "field": "<field>", "why": "<why it is an exception>",
+                   "fix": "<what resolves it>", "owner": "<queue/role>", "severity": "hold" | "note" }
+          // exc is REQUIRED whenever value is null and MUST be omitted when value is present
+        }
+      ],
+      "route": { "queue": "<destination queue>", "hold": "<hold condition>" | null }
+    }
+  ],
+  "validators": [
+    { "name": "<banking check, e.g. loss-payee check>", "doc": "B",
+      "verdict": "pass" | "fail" | "na",
+      "because": "<the specific finding>", "fix": "<what resolves it>" | null,
+      "cites": [ { "kind": "doc", "ref": "packet" } ] }
+  ]
+}
+Rules for the shape: a null value REQUIRES its exc object — an illegible or absent field
+without an exception is invalid output; never place a guessed value in "value". The
+insurance-certificate loss-payee check and the payoff-authorization check MUST each appear
+in validators[] with their packet findings. Confidence states: "verified" = clear on source,
+"qualified" = readable but uncertain, "routed" = sent to a human. Transcribe values exactly
+as the packet shows them.`,
+
+  contractanalyzer: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "contract": { "name": "NorthArc Digital Banking Platform Agreement", "termYears": 5 },
+  "ledger": [
+    { "category": "cost" | "renewal" | "exit" | "liability" | "absent",
+      "term": "<the clause or obligation>",
+      "value": "<the term as written>" | null,      // null ONLY with category "absent"
+      "risk": "<the exposure it creates>" | null,
+      "projection": { "formula": "<compounding arithmetic shown>", "value": <number> } | null,
+      "cites": [ { "kind": "doc", "ref": "<section ref>" } ] }
+  ],
+  "calendar": { "termEnd": "<YYYY-MM-DD>", "noticeDeadline": "<YYYY-MM-DD>",
+                "daysRemaining": <number>, "inWindow": true | false,
+                "cites": [ { "kind": "derived", "formula": "<date arithmetic shown>" } ] },
+  "negotiation": [ { "order": 1, "ask": "<specific ask>", "leverage": "<what creates it>",
+                     "cites": [ ... ] } ],
+  "tcoInputs": { "platformFeeMo": 8500, "perUnitFee": 1.45, "unitBasis": "active user",
+                 "escalator": "CPI+2%" }
+}
+Rules for the shape: the missing data-use clause MUST appear as a ledger row with
+category "absent" and value null — absence is a finding, not a footnote. The uncapped
+escalator MUST carry its compounding projection with the arithmetic shown. calendar is
+computed from contract dates with the date math in its cite. Negotiation asks are ordered
+by leverage, strongest first. Quote money terms exactly as written.`,
+
+  securityreview: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "package": { "provided": [ "<artifact>" ], "absent": [ "<artifact>" ] },
+  "ladder": [
+    { "domain": "<control domain>",
+      "basis": "self-attested" | "verified-evidence" | "external-telemetry",
+      "finding": "<the specific finding, factually>",
+      "means": "<operational meaning for the bank>",
+      "request": "<compensating evidence to ask for>" | null,
+      "cites": [ { "kind": "doc", "ref": "<e.g. SOC2 exceptions(1)>" } ] }
+  ],
+  "dpa": { "adequate": [ "<term present and sufficient>" ], "missing": [ "<term absent>" ],
+           "cites": [ ... ] },
+  "questions": [ { "order": 1, "q": "<follow-up question>", "closes": "<which risk it closes>" } ],
+  "residual": { "statement": "<plain prose: what the bank accepts if it signs today>",
+                "cites": [ ... ] }
+}
+Rules for the shape: NO grades, NO scores, NO ratings, NO bands anywhere — basis per domain
+is the only tiering, and it names the EVIDENCE KIND, never a quality level. Every ladder
+finding cites its package location. The SOC 2 exceptions, the 9-of-12-month subservice gap,
+and the unretested high finding MUST each appear as rungs. The missing SIG appears in
+package.absent. 5-7 questions ordered by risk closed. residual.statement is one paragraph,
+concrete, no hedging.`,
+
+  archassess: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "posture": { "summary": "<3-4 sentence current-state read>",
+               "mostConsequential": "<the single finding that matters most>" },
+  "findings": [
+    { "pillar": "Reliability" | "Security" | "Cost" | "Operational Excellence" | "Performance"
+                | "Integration Debt" | "AI Readiness",
+      "element": "<the specific inventory element the finding ties to>",
+      "risk": "<what it exposes>",
+      "heat": "high" | "medium" | "low",
+      "blastRadius": [ "<what breaks downstream>" ] | [],
+      "cites": [ { "kind": "doc", "ref": "estate" } ] }
+  ],
+  "gaps": [ { "silence": "<what the description does not cover>",
+              "why": "<what cannot be assessed because of it>" } ],
+  "aiReadiness": { "can": [ "<possible today>" ], "cannot": [ "<blocked until fixed>" ],
+                   "cites": [ ... ] },
+  "sequence": [
+    { "order": 1, "move": "<the recommendation>",
+      "unblocks": [ <order numbers this move unblocks> ],
+      "because": "<why it precedes the next>" }
+  ]
+}
+Rules for the shape: every finding names its element — free-floating judgments are invalid.
+Where the estate description is silent, write a gap, never an assumption. Every sequence
+entry except the last MUST have a non-empty unblocks[] — a flat list with no dependency
+edges is invalid output. The stale DR exercise, the single-FTE ETL, and the point-to-point
+feed sprawl must each surface as findings with heat.`,
+
+  projectassess: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "initiative": { "name": "<from charter>", "oneTime": 680000, "runMo": 14000 },
+  "jury": [
+    { "dimension": "payback" | "benefits credibility" | "competitiveness" | "delivery risk" | "strategic fit",
+      "verdict": "supports" | "qualified" | "concern",
+      "because": "<the finding, factually>",
+      "atCharter":  { "formula": "<arithmetic shown>", "value": "<result>" } | null,
+      "atRealistic":{ "formula": "<arithmetic shown>", "value": "<result>" } | null,
+      "validates": "<what to validate before committing>" | null,
+      "failureModes": [ "<specific failure mode>" ] | [],
+      "cites": [ { "kind": "doc", "ref": "charter" } ] }
+  ],
+  "sensitivity": [
+    { "rank": 1, "assumption": "<the assumption>", "swing": "<how the answer moves>", "cites": [ ... ] }
+  ],
+  "recommendation": { "verdict": "proceed" | "proceed-with-conditions" | "defer",
+                      "conditions": [ "<specific binding condition>" ] }
+}
+Rules for the shape: all five dimensions MUST appear in jury[], each with its own verdict —
+NO composite score, NO weighted total, NO blended rating exists or may be invented. The
+payback dimension MUST carry both atCharter and atRealistic with arithmetic shown. The
+benefits-credibility dimension must test the 40% claim against its own sourcing.
+sensitivity[] is rank-ordered by how much each assumption moves the answer. Conditions are
+binding and specific, not caveats.`,
+
+  interviewkit: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble, matching exactly:
+{
+  "role": "<as given>", "level": "<as given>",
+  "framing": "<2-3 sentences: what this role is accountable for at a community bank>",
+  "competencies": [
+    { "name": "<competency>", "questions": [
+        { "q": "<behavioral question>", "strongAnswer": "<what a strong answer includes>" } ] }
+  ],
+  "skillsMatrix": [ { "skill": "<technical skill>", "probe": "<how to test it directly>" } ],
+  "workSample": { "exercise": "<realistic exercise>", "timeBudget": "<e.g. 45 minutes>" },
+  "anchors": [ { "competency": "<name>", "strong": "<sounds like>", "adequate": "<sounds like>",
+                 "concern": "<sounds like>" } ],
+  "doNotAsk": [ "<question or topic to avoid, with the compliant alternative if one exists>" ],
+  "describedCapability": {
+    "name": "Resume assessment",
+    "status": "engagement-mode-only",
+    "description": "Evidence-cited resume assessment against the role's competency map — every strength or gap cites the resume line that supports it. Runs only inside an engagement, on the bank's roles and rubric, with adverse-impact monitoring.",
+    "boundary": "This demo never screens, scores, or ranks candidates — that boundary is the design."
+  }
+}
+Rules for the shape: 3-4 competencies with 2-3 questions each; every question carries its
+strongAnswer anchor. NO field for a candidate, a resume, or any evaluation of a person
+exists — do not add one under any name. describedCapability is FIXED prose: reproduce it
+verbatim as given above. doNotAsk includes at least 4 entries grounded in fair-hiring
+practice. Banking-role-aware: lender, BSA analyst, credit analyst, teller-ops framings
+should feel native.`,
+
+  policyqa: `
+Output format — respond with ONLY a JSON object, no markdown, no preamble. TWO valid shapes:
+
+If the corpus answers the question:
+{
+  "question": "<as given>",
+  "answered": true,
+  "answer": { "text": "<the answer, ≤120 words, from the corpus only>",
+              "cites": [ { "kind": "doc", "ref": "<LP-x.x>" } ] },
+  "clauses": [
+    { "ref": "<LP-x.x>", "verbatim": "<the exact clause text from the corpus>",
+      "policy": "<policy name>", "version": "<e.g. 2026-01>",
+      "reviewDue": "<e.g. 2027-01>", "stale": false }
+  ],
+  "coverage": { "state": "covered" | "partial" },
+  "conflicts": [],
+  "noAnswer": null
+}
+
+If the corpus does NOT answer the question:
+{
+  "question": "<as given>",
+  "answered": false,
+  "answer": null, "clauses": [],
+  "coverage": { "state": "not-covered" },
+  "conflicts": [],
+  "noAnswer": { "statement": "<one sentence: what the corpus does not address>",
+                "closest": { "ref": "<nearest related section>", "why": "<why it is nearest>" } | null,
+                "action": "escalate" }
+}
+Rules for the shape: answer ONLY from the corpus sections provided — never from general
+banking knowledge. Every clause quoted must be verbatim from the corpus with its real
+section ref, version, and review date. If the question is outside the corpus, answered:false
+is the CORRECT output, not a failure — do not stretch a tangential section into an answer.
+coverage "partial" means the corpus addresses part of the question; say which part in the
+answer text. conflicts[] stays empty in the demo.`,
+};
+
+/* per-route max_tokens (JSON is heavier than markdown) */
+const MAX_TOKENS = {
+  ceobrief: 3000, briefing: 2500, attrition: 2500, creditmemo: 3500,
+  callreport: 2500, amltriage: 3200, regmonitor: 2500,
+  docflow: 3000, contractanalyzer: 2800, securityreview: 2800, archassess: 3000,
+  projectassess: 2800, interviewkit: 2800, policyqa: 2200,
+};
+const DEFAULT_MAX_TOKENS = 2500;
+
+/* structural validation — parse-or-reject, never repair */
+function tryParseContract(text, route) {
+  let obj;
+  try {
+    const m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    obj = JSON.parse(m ? m[1] : text);
+  } catch { return null; }
+  if (!obj || typeof obj !== "object") return null;
+
+  const checks = {
+    ceobrief:  (o) => Array.isArray(o.signals) && o.signals.length >= 3 && o.signals.length <= 7
+                      && o.signals.every(s => s.changed && s.matters && s.conf && Array.isArray(s.cites)),
+    briefing:  (o) => o.snapshot && Array.isArray(o.angles) && o.angles.length === 3
+                      && (o.likelyNeeds || []).every(n => n.hypothesis && n.signal),
+    attrition: (o) => o.economics
+                      && ["replacementCost","retentionCost","breakEvenRate"]
+                         .every(k => o.economics[k] && o.economics[k].formula)   // glass-box law
+                      && Array.isArray(o.benignChecks) && o.benignChecks.length >= 2
+                      && (o.drivers || []).every(d => d.hypothesis && d.signal),
+    creditmemo:(o) => Array.isArray(o.map) && o.map.length >= 3
+                      && o.map.every(n => n.claim && Array.isArray(n.evidence))
+                      && o.stressLens && Array.isArray(o.stressLens.map)
+                      && Array.isArray(o.stressLens.weakestFacts)
+                      && o.recommendation && o.recommendation.verdict,
+  callreport: (o) =>
+    Array.isArray(o.board) && o.board.length >= 3
+    && Array.isArray(o.tieouts) && o.tieouts.length >= 1
+    && o.tieouts.every(t => typeof t.pass === "boolean"
+        && Array.isArray(t.cites)
+        && t.cites.some(c => c.kind === "derived" && c.formula))   // arithmetic-in-the-row law
+    && Array.isArray(o.flags) && o.flags.length >= 3
+    && o.flags.every(f => f.what && f.draftExplanation && f.resolves) // explanation welded to flag
+    && Array.isArray(o.filingChecklist),
+
+  amltriage: (o) =>
+    Array.isArray(o.chain) && o.chain.length >= 4
+    && o.chain.every(l => l.fact && ["fact","analysis","hypothesis"].includes(l.kind))
+    && o.chain.some(l => l.remediation === true)                    // missed CTR must surface
+    && o.narrative && o.narrative.pillars
+    && Array.isArray(o.narrative.sentences)
+    && o.narrative.sentences.length >= 3
+    && o.narrative.sentences.every(s => Array.isArray(s.supports) && s.supports.length >= 1
+        && s.supports.every(i => Number.isInteger(i) && i >= 0 && i < o.chain.length)) // sentence-to-evidence law
+    && typeof o.narrative.complete === "boolean"
+    && o.disposition && o.disposition.recommendation,
+
+  regmonitor: (o) =>
+    o.profile && o.scan
+    && Array.isArray(o.items)
+    && o.items.every(i => typeof i.applies === "boolean" && i.changed && i.soWhat)
+    && o.items.filter(i => i.applies).every(i => i.nowWhat && Array.isArray(i.cites) && i.cites.length >= 1)
+    && Array.isArray(o.watchlist),
+  docflow: (o) =>
+    o.batch && Array.isArray(o.docs) && o.docs.length >= 2
+    && o.docs.every(d => Array.isArray(d.fields)
+        && d.fields.every(f => f.name && f.conf
+            && (f.value != null || (f.exc && f.exc.why && f.exc.fix))))   // never-guesses type law
+    && Array.isArray(o.validators) && o.validators.length >= 2
+    && o.validators.every(v => v.name && ["pass","fail","na"].includes(v.verdict) && v.because),
+
+  contractanalyzer: (o) => {
+    if(!(Array.isArray(o.ledger) && o.ledger.length >= 5)) return false;
+    if(!o.ledger.some(r => r.category === "absent" && r.value == null)) return false; // absence-is-a-finding law
+    if(!o.ledger.every(r => r.category !== "absent" ? r.value != null : true)) return false;
+    if(!(o.calendar && typeof o.calendar.inWindow === "boolean"
+        && Array.isArray(o.calendar.cites)
+        && o.calendar.cites.some(c => c.kind === "derived" && c.formula))) return false;
+    if(!(Array.isArray(o.negotiation) && o.negotiation.length >= 2
+        && o.negotiation.every(n => n.ask && n.leverage))) return false;
+    return o.tcoInputs && typeof o.tcoInputs.platformFeeMo === "number";
+  },
+
+  securityreview: (o) => {
+    const BASES = ["self-attested","verified-evidence","external-telemetry"];
+    if(!(Array.isArray(o.ladder) && o.ladder.length >= 3
+        && o.ladder.every(r => r.domain && BASES.includes(r.basis) && r.finding))) return false;
+    // forbidden-scale rule as code: reject grade/score/band vocabulary anywhere in the payload
+    const flat = JSON.stringify(o).toLowerCase();
+    if(/\b(grade|score[sd]?|rating|a-f|[0-9]{3}-[0-9]{3})\b/.test(flat)) return false;
+    return o.package && Array.isArray(o.package.absent)
+        && o.dpa && Array.isArray(o.dpa.missing)
+        && Array.isArray(o.questions) && o.questions.length >= 4
+        && o.residual && o.residual.statement;
+  },
+
+  archassess: (o) =>
+    o.posture && o.posture.mostConsequential
+    && Array.isArray(o.findings) && o.findings.length >= 4
+    && o.findings.every(f => f.pillar && f.element && ["high","medium","low"].includes(f.heat))
+    && Array.isArray(o.gaps) && o.gaps.length >= 1
+    && o.aiReadiness && Array.isArray(o.aiReadiness.cannot)
+    && Array.isArray(o.sequence) && o.sequence.length >= 3
+    && o.sequence.slice(0, -1).every(s => Array.isArray(s.unblocks) && s.unblocks.length >= 1) // no-wish-list law
+    && o.sequence.every(s => s.move && s.because),
+  projectassess: (o) => {
+    const DIMS = ["payback","benefits credibility","competitiveness","delivery risk","strategic fit"];
+    if(!(Array.isArray(o.jury) && o.jury.length === 5)) return false;
+    if(!DIMS.every(d => o.jury.some(j => j.dimension === d))) return false;
+    if(!o.jury.every(j => ["supports","qualified","concern"].includes(j.verdict))) return false;
+    const pb = o.jury.find(j => j.dimension === "payback");
+    if(!(pb && pb.atCharter && pb.atCharter.formula && pb.atRealistic && pb.atRealistic.formula)) return false;
+    // no-composite law: reject blended-score vocabulary anywhere in the payload
+    if(/\b(composite|weighted (score|total)|overall score|blended)\b/i.test(JSON.stringify(o))) return false;
+    return Array.isArray(o.sensitivity) && o.sensitivity.length >= 2
+        && o.recommendation && ["proceed","proceed-with-conditions","defer"].includes(o.recommendation.verdict)
+        && Array.isArray(o.recommendation.conditions);
+  },
+
+  interviewkit: (o) => {
+    if(!(o.role && o.framing && Array.isArray(o.competencies) && o.competencies.length >= 3)) return false;
+    if(!o.competencies.every(c => Array.isArray(c.questions)
+        && c.questions.every(q => q.q && q.strongAnswer))) return false;
+    if(!(Array.isArray(o.anchors) && o.anchors.length >= 3
+        && o.anchors.every(a => a.strong && a.adequate && a.concern))) return false;
+    if(!(Array.isArray(o.doNotAsk) && o.doNotAsk.length >= 4)) return false;
+    // CHRO ruling as code: reject candidate-evaluation vocabulary anywhere
+    if(/\b(candidate score|resume score|rank(ed|ing)? candidates|screen(ed|ing)? candidates|applicant rating)\b/i
+        .test(JSON.stringify(o))) return false;
+    return o.describedCapability && o.describedCapability.status === "engagement-mode-only"
+        && o.describedCapability.boundary;
+  },
+
+  policyqa: (o) => {
+    if(typeof o.answered !== "boolean" || !o.coverage) return false;
+    if(o.answered){
+      // half-answer rejection: answered:true REQUIRES receipts
+      return o.answer && o.answer.text
+          && Array.isArray(o.clauses) && o.clauses.length >= 1
+          && o.clauses.every(c => c.ref && c.verbatim && c.policy && c.version)
+          && ["covered","partial"].includes(o.coverage.state);
+    }
+    // answered:false REQUIRES the noAnswer object — first-class, never empty
+    return o.noAnswer && o.noAnswer.statement
+        && o.coverage.state === "not-covered"
+        && (!o.clauses || o.clauses.length === 0);
+  },
+  };
+  const check = checks[route];
+  return check && check(obj) ? obj : null;
+}
+
+function assemble(route, data, cors) {
+  const text = (data.content || [])
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
+    .join("\n")
+    .trim();
+  if (!text) return json({ error: "Empty response — try again." }, 502, cors);
+
+  const meta = CONTRACT_META[route];
+  if (meta) {
+    const parsed = tryParseContract(text, route);
+    if (parsed) {
+      return json({
+        envelope: {
+          agent: route,
+          surface: meta.surface,
+          seat: meta.seat,
+          generatedAt: new Date().toISOString(),
+          mode: meta.mode,
+          universe: meta.universe,
+          model: data.model,
+          engagementOnly: meta.engagementOnly,
+          gate: meta.gate,
+        },
+        payload: parsed,
+      }, 200, cors);
+    }
+    console.log("contract-fallback", route);
+  }
+  return json({ output: text, agent: route, model: data.model, usage: data.usage }, 200, cors);
+}
+
+/* ---------------- agent definitions ---------------- */
+
 const AGENTS = {
 
   /* ---- Chief Lending Officer seat ---- */
@@ -48,15 +813,6 @@ Rules:
 - If you cannot verify the company exists or find meaningful public information, say so plainly in the Snapshot section and keep other sections brief and conditional. Never invent facts, financials, or news.
 - Public information only. Frame financial-needs analysis as hypotheses to validate in the meeting.
 - This is a constrained public demo: the production version integrates core banking, CRM, and portfolio data that this demo does not have. Do not pretend to have such data.
-
-Output format — markdown with exactly these six sections, in this order:
-## Snapshot
-## Recent developments
-## Likely financial needs
-## Conversation angles
-## Risks and red flags
-## Questions to ask
-
 Tone: terse, factual, operator-grade.`,
     buildPrompt(body) {
       const company = String(body.company || "").trim().slice(0, 120);
@@ -77,19 +833,6 @@ Rules:
 - Every item must be real, dated, and attributable to the issuing agency. Never invent releases, dates, or docket numbers. If you find little recent activity relevant to the profile, say so — a quiet period is a valid finding.
 - Classify applicability against the provided profile (asset size, regulator, business lines). Be explicit when an item does NOT apply and why (e.g., asset-size threshold).
 - This is a constrained public demo: the production version runs on a continuous feed with routing to named owners inside the bank. Do not pretend to have the bank's internal data.
-
-Output format — markdown with exactly these five sections:
-## Scan summary
-2-3 sentences: period covered, agencies scanned, overall temperature.
-## Applies to you
-3-5 bullets. Each: **[Agency, date]** — what it is, why it applies to this profile, what action it implies. Most urgent first.
-## Does not apply — and why
-2-3 bullets of prominent recent items that do NOT reach this profile, with the threshold or scope reason.
-## Watch list
-2-3 bullets: proposed rules or signals likely to mature in the next two quarters.
-## Suggested owners
-Map each "Applies to you" item to a typical owner role (BSA Officer, CRA Officer, CFO, etc.) as a short list.
-
 Tone: terse, factual, operator-grade.`,
     buildPrompt(body) {
       const size = String(body.assetSize || "").slice(0, 20);
@@ -112,19 +855,6 @@ Rules:
 - Use web search (up to 4 searches) for: the current rate environment and any market-moving banking news; recent news mentioning the named bank (if any); local/regional market and economic developments for the bank's stated market; notable competitor or M&A activity in that footprint; and any fresh regulatory items a CEO should know exist.
 - Everything must be real, current, and sourced. Never invent news about the bank or its market. If there is no recent public news about the bank itself, say so in one line — that is normal for most community banks.
 - This is a constrained public demo built on public information only: the production version opens with the bank's own overnight numbers — deposit flows, pipeline, liquidity position — from core extracts this demo does not have. Say this once, in the header line of the Numbers section, and do not fabricate internal figures.
-
-Output format — markdown with exactly these five sections:
-## The number that matters today
-One market/rate fact a bank CEO should carry into the day, with why it matters at community-bank scale.
-## Your bank in the news
-1-3 bullets, or one line stating nothing recent was found.
-## Your market
-2-4 bullets: local economic and competitor developments in the stated footprint.
-## Regulatory radar
-2-3 bullets: items a CEO should know exist this week (headline level, not compliance detail).
-## Worth 5 minutes
-1-2 bullets: one longer read or development worth the CEO's attention, with why.
-
 Tone: terse, factual, written for a reader with 4 minutes.`,
     buildPrompt(body) {
       const bank = String(body.bank || "").trim().slice(0, 120);
@@ -208,19 +938,6 @@ Customer concentration: largest customer 22% of 2025 revenue (aerospace supplier
 [LP-6.1] All policy exceptions documented, CCO-approved in writing, reported quarterly.
 [LP-7.3] Minimum global debt service coverage 1.25x at underwriting; projections-based coverage below 1.10x historical is an exception.
 === END EXCERPTS ===
-
-Output format — markdown with exactly these seven sections:
-## Request
-## Borrower overview
-## Financial analysis
-Include computed global DSCR for 2025 pro forma with the arithmetic shown.
-## Collateral
-## Policy compliance check
-Every touchpoint with the excerpts above, cited.
-## Risks and mitigants
-## Draft recommendation
-Conditions precedent as a short list. Close with: "Draft for analyst review — not a credit decision."
-
 Tone: the register of a well-run credit department. Terse, numerate, no filler.`,
     buildPrompt(body) {
       const focus = ["standard", "cashflow", "collateral"].includes(body.focus) ? body.focus : "standard";
@@ -262,19 +979,6 @@ Account counterparties: deposits are almost entirely currency; outflows are chec
 [BSA-2.2] Currency transactions over $10,000 in a business day, single or aggregated, require a CTR filed within 15 calendar days. Structuring indicators must be escalated to the BSA Officer the same business day.
 [BSA-3.1] EDD is required for cash-intensive businesses averaging over $50,000 monthly currency activity, and any customer subject to a prior SAR filing within 24 months.
 === END EXCERPTS ===
-
-Output format — markdown with exactly these six sections:
-## Alert summary
-## Activity analysis
-Pattern vs CDD expectations, with arithmetic shown.
-## Subject background
-## Investigation checklist
-5-7 specific items the analyst should pull or verify before disposition.
-## Draft SAR narrative
-Plain factual prose in who/what/when/where/why-suspicious structure. Note the June 16 missed CTR aggregation as a fact requiring remediation.
-## Draft disposition
-Frame as a recommendation with rationale. Close with: "Draft for BSA Officer review — filing decisions rest with the BSA Officer."
-
 Tone: the register of a well-run BSA department. Factual, unemotional, precise.`,
     buildPrompt(body) {
       const focus = ["standard", "narrative", "checklist"].includes(body.focus) ? body.focus : "standard";
@@ -314,21 +1018,6 @@ Merchant + treasury fee income from relationship: ~$14,000/yr.
 === POLICY EXCERPT (FICTIONAL) ===
 [LP-6.1] All policy exceptions (including deposit pricing exceptions) documented, CCO/CFO-approved in writing, reported quarterly.
 === END EXCERPT ===
-
-Output format — markdown with exactly these six sections:
-## Signal summary
-## Flow analysis
-Decline run-rate and 6-month projection at the current rate, arithmetic shown.
-## Likely drivers
-Hypotheses only, each tied to a specific flow signal.
-## Retention economics
-Cost of replacing the runoff at wholesale funding vs the cost of a retention rate, arithmetic shown. Include the relationship's full value (fee income, mortgage) in the frame.
-## Recommended play
-Specific and sequenced: who meets, with what offer structure, and what to ask.
-## Draft outreach note
-A short, warm, non-alarmed note from the relationship manager requesting the meeting — no rate mentioned in the note.
-Close with: "Draft for relationship manager review — pricing exceptions per [LP-6.1]."
-
 Tone: a good treasury desk briefing a good RM. Numerate, calm, specific.`,
     buildPrompt(body) {
       const focus = ["standard", "economics", "outreach"].includes(body.focus) ? body.focus : "standard";
@@ -371,19 +1060,6 @@ Re: payoff request, loan ending 4482, borrower initials D.K.
 Closing scheduled August 3. Remit statement to this office."
 Borrower authorization to release: [not attached]. Return contact: present.
 === END BATCH ===
-
-Output format — markdown with exactly these six sections:
-## Batch summary
-## Document A — classification and extraction
-Field: value lines; illegible/missing stated plainly.
-## Document B — classification and extraction
-## Document C — classification and extraction
-## Exceptions flagged
-Numbered; each with what resolves it.
-## Routing
-Each document to a queue/owner with its hold condition.
-Close with: "Draft processing for operations review — exceptions resolve per bank procedures."
-
 Tone: a crisp operations desk. Field-precise, zero filler.`,
     buildPrompt(body) {
       const focus = ["standard", "exceptions"].includes(body.focus) ? body.focus : "standard";
@@ -420,19 +1096,6 @@ Schedule RC-R note: CRE nonfarm nonresidential includes 22,600 owner-occupied,
   currently risk-weighted with non-owner-occupied [flag for review].
 Prior-quarter memo: no edit-check exceptions filed.
 === END EXTRACTS ===
-
-Output format — markdown with exactly these five sections:
-## Edit check summary
-## Cross-schedule tie-outs
-Arithmetic shown. The RC vs RC-C difference is the core finding.
-## Flagged items
-Numbered: the tie-out gap, the YoY interest income variance (state what would legitimately explain it and what documentation supports it), the RC-R risk-weighting note.
-## Draft explanations
-Examiner-ready one-paragraph explanations the controller can adapt for each flag.
-## Filing checklist
-Short list of what to resolve or document before submission.
-Close with: "Draft for controller review — filing accuracy rests with the bank."
-
 Tone: a meticulous regulatory reporting desk. Precise, calm, zero filler.`,
     buildPrompt(body) {
       const focus = ["standard", "tieouts", "explanations"].includes(body.focus) ? body.focus : "standard";
@@ -470,20 +1133,6 @@ Data use: no clause addressing Provider use of bank or customer data for product
   improvement, analytics, or AI training. [absent]
 Current usage per bank records: 9,200 active users/month.
 === END EXCERPTS ===
-
-Output format — markdown with exactly these five sections:
-## Commercial terms extracted
-Field: value lines, with current annualized cost computed.
-## Renewal and exit mechanics
-Dates, windows, and the real cost of leaving, computed.
-## Risk watchpoints
-Numbered: the uncapped escalator (compound it over the renewal term), the proprietary-format de-conversion, the absent data-use clause, the SLA remedy cap.
-## Negotiation prep
-Specific asks, ordered by leverage, with the notice-window timing that creates the leverage.
-## TCO inputs
-The extracted numbers restated as calculator-ready fields: SaaS platform fee/month, per-unit fee, escalator assumption.
-Close with: "Draft analysis for review with counsel — not legal advice."
-
 Tone: a sharp procurement desk. Numerate, specific, zero filler.`,
     buildPrompt(body) {
       const focus = ["standard", "exit", "negotiation"].includes(body.focus) ? body.focus : "standard";
@@ -524,22 +1173,6 @@ DPA excerpt: data residency US-only; subprocessor changes on 30 days' notice wit
 SIG / standardized questionnaire: not provided.
 Insurance: cyber liability $5M per claim [certificate provided].
 === END PACKAGE ===
-
-Output format — markdown with exactly these six sections:
-## Package completeness
-What was provided vs what a full review expects.
-## SOC 2 analysis
-The two exceptions: what each means operationally and what compensating evidence to request.
-## Penetration test posture
-The unretested high finding is the core issue; the open mediums and their timeline.
-## DPA review
-What's adequate, what's missing (e.g., audit rights, AI/data-use terms).
-## Follow-up questions for the vendor
-Numbered, specific, ordered by risk.
-## Residual risk summary
-Plain statement of what the bank would be accepting if it signed today.
-Close with: "Draft review — risk acceptance rests with the CISO."
-
 Tone: a rigorous third-party-risk desk. Specific, evidence-first, zero filler.`,
     buildPrompt(body) {
       const focus = ["standard", "soc2", "questions"].includes(body.focus) ? body.focus : "standard";
@@ -562,22 +1195,6 @@ Rules:
 - Behavioral questions must be anchored in real situations the role faces; no brain-teasers, no culture-fit vagueness.
 - Scoring guidance must use behaviorally-anchored descriptions, never numeric gut scores alone.
 - Include a short "do not ask" list limited to well-established interview no-go areas, stated plainly.
-
-Output format — markdown with exactly these six sections:
-## Role framing
-2-3 sentences: what this role actually does at a community bank and what distinguishes strong from adequate.
-## Competency questions
-6-8 behavioral questions, each with one line on what a strong answer contains.
-## Technical / skills matrix
-The 4-6 skills that matter, each with a probe question.
-## Work sample
-One realistic exercise the bank could run, with time budget.
-## Scoring guidance
-Behaviorally-anchored: what "strong / adequate / concern" looks like per competency area, briefly.
-## Do not ask
-Short list of prohibited or ill-advised areas.
-Close with: "Kit for hiring-manager review — hiring decisions rest with humans."
-
 Tone: a seasoned HR business partner who has hired for banks. Practical, fair, terse.`,
     buildPrompt(body) {
       const role = String(body.role || "").trim().slice(0, 120);
@@ -615,20 +1232,6 @@ Resilience: nightly backups; full restore tested annually; core DR via vendor co
 Security: perimeter firewall + EDR; MFA on email and VPN; no data classification program.
 Identity: Active Directory on-prem; no centralized identity for SaaS apps (per-app logins).
 === END DESCRIPTION ===
-
-Output format — markdown with exactly these five sections:
-## Assessment summary
-Overall posture in 3-4 sentences, including the single most consequential finding.
-## Pillar findings
-One short block per pillar (Reliability, Security, Cost, Operational Excellence, Performance), each finding tied to the description.
-## Integration debt
-The point-to-point topology, the re-keying, and the single-FTE ETL risk, quantified in exposure terms.
-## AI-readiness
-What this architecture can and cannot support today, stated plainly.
-## Sequenced recommendations
-4-6 moves in dependency order, each with why it comes before the next.
-Close with: "Draft assessment — architecture decisions rest with the bank."
-
 Tone: a principal architect who has run bank infrastructure. Direct, specific, zero filler.`,
     buildPrompt(body) {
       const focus = ["standard", "integration", "ai"].includes(body.focus) ? body.focus : "standard";
@@ -668,22 +1271,6 @@ Delivery: 6-month timeline; 0.5 FTE project manager allocated; no named
 Strategic fit note: digital acquisition named a top-3 priority in the bank's
   2026 strategic plan.
 === END CHARTER ===
-
-Output format — markdown with exactly these six sections:
-## Financial assessment
-Payback at charter assumptions AND at a realistic ramp (benefits at 50% for six months), arithmetic shown.
-## Benefits credibility
-The 40% claim: what supports it, what would validate it pre-commitment, what the bank's own funnel data implies.
-## Competitiveness
-What 3-of-5 competitors already live means for both the upside case and the do-nothing case.
-## Delivery risk
-The 0.5 FTE PM, the missing run-state owner, and the unbudgeted integration testing — each with its failure mode.
-## Non-financial factors
-Strategic fit, organizational readiness, and anything the charter is silent on.
-## Recommendation with conditions
-Draft: proceed / proceed-with-conditions / defer, with the specific conditions.
-Close with: "Draft assessment — investment decisions rest with the committee."
-
 Tone: a transformation office that has seen optimistic charters before. Numerate, fair, direct.`,
     buildPrompt(body) {
       const focus = ["standard", "financial", "risk"].includes(body.focus) ? body.focus : "standard";
@@ -748,9 +1335,12 @@ export default {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 2500,
-        system: agent.system,
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: agent.maxSearches }],
+        max_tokens: MAX_TOKENS[route] || DEFAULT_MAX_TOKENS,
+        system: JSON_FORMAT[route] ? agent.system + "\n\n" + JSON_FORMAT[route] : agent.system,
+        // tools only when the route actually searches; packet routes get none
+        ...(agent.maxSearches > 0 && {
+          tools: [{ type: "web_search_20250305", name: "web_search", max_uses: agent.maxSearches }],
+        }),
         messages: [{ role: "user", content: built.prompt }],
       }),
     });
@@ -762,12 +1352,6 @@ export default {
     }
 
     const data = await apiRes.json();
-    const output = (data.content || [])
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
-
-    if (!output.trim()) return json({ error: "Empty response — try again." }, 502, cors);
-    return json({ output, agent: route, model: data.model, usage: data.usage }, 200, cors);
+    return assemble(route, data, cors);
   },
 };
